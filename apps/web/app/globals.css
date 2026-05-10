@@ -1,0 +1,127 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pixelify+Sans:wght@400;500;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 42 100% 97%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --accent: 1 72% 66%;
+  --muted: 37 100% 94%;
+  --border: 0 0% 100%;
+  --font-pixel: "Pixelify Sans";
+  --font-body: "Inter";
+}
+
+.dark {
+  --background: 224 25% 11%;
+  --foreground: 44 100% 95%;
+  --card: 224 24% 16%;
+  --accent: 1 72% 66%;
+  --muted: 224 18% 20%;
+  --border: 224 20% 24%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(137, 207, 240, 0.34), transparent 30%),
+    radial-gradient(circle at top right, rgba(149, 213, 178, 0.3), transparent 25%),
+    linear-gradient(180deg, #fff8e7 0%, #fffdf8 55%, #f3fbff 100%);
+  color: hsl(var(--foreground));
+  font-family: var(--font-body), sans-serif;
+}
+
+.dark body {
+  background:
+    radial-gradient(circle at top left, rgba(255, 107, 107, 0.2), transparent 30%),
+    radial-gradient(circle at top right, rgba(137, 207, 240, 0.14), transparent 26%),
+    linear-gradient(180deg, #111827 0%, #0f172a 100%);
+}
+
+::selection {
+  background: rgba(255, 107, 107, 0.24);
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(255, 248, 231, 0.95), rgba(243, 251, 255, 0.92));
+  font-family: var(--font-body), sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 38px rgba(231, 111, 115, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.vlaad-map-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  border-radius: 14px 14px 14px 4px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+  color: #0f172a;
+  font-family: var(--font-pixel), sans-serif;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.vlaad-map-marker::after {
+  content: "";
+  position: absolute;
+  inset: auto auto -10px 7px;
+  width: 16px;
+  height: 16px;
+  transform: rotate(45deg);
+  background: inherit;
+  border-bottom: inherit;
+  border-right: inherit;
+}
+
+.vlaad-map-marker--community {
+  background: linear-gradient(135deg, #89cff0, #fff8e7);
+}
+
+.vlaad-map-marker--trusted {
+  background: linear-gradient(135deg, #ffd166, #fff8e7);
+}
+
+.vlaad-map-marker--verified {
+  background: linear-gradient(135deg, #95d5b2, #e8fff4);
+  box-shadow: 0 0 0 8px rgba(149, 213, 178, 0.22), 0 12px 28px rgba(15, 23, 42, 0.2);
+}
+
+.vlaad-map-marker--emergency {
+  background: linear-gradient(135deg, #ff6b6b, #ffd6d6);
+  animation: pulseSoft 1.8s ease-in-out infinite;
+}

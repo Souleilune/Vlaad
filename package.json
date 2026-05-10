@@ -1,0 +1,14 @@
+{
+  "name": "vlaad-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @vlaad/web --filter @vlaad/api dev",
+    "dev:web": "pnpm --filter @vlaad/web dev",
+    "dev:api": "pnpm --filter @vlaad/api dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

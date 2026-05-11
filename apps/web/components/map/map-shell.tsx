@@ -9,6 +9,7 @@ import { useAppStore } from "@/store/use-app-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ReportDetailsModal } from "@/components/reports/report-details-modal";
 
 const LiveMap = dynamic(
   () => import("@/components/map/live-map").then((module) => module.LiveMap),
@@ -31,6 +32,7 @@ export function MapShell() {
   const { reports, loading } = useRealtimeFeed();
   const { selectedBloodTypes, toggleBloodType, urgentOnly, setUrgentOnly } = useAppStore();
   const [focusedReportId, setFocusedReportId] = useState<string | undefined>(undefined);
+  const [openReportId, setOpenReportId] = useState<string | undefined>(undefined);
 
   const filtered = useMemo(
     () =>
@@ -49,6 +51,7 @@ export function MapShell() {
   );
 
   const focusedReport = filtered.find((report) => report.id === focusedReportId) ?? filtered[0];
+  const openReport = filtered.find((report) => report.id === openReportId);
 
   const openDirections = () => {
     if (!focusedReport) {
@@ -63,8 +66,14 @@ export function MapShell() {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
-      <Card className="overflow-hidden p-0">
+    <>
+      <ReportDetailsModal
+        report={openReport}
+        open={Boolean(openReport)}
+        onClose={() => setOpenReportId(undefined)}
+      />
+      <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
+        <Card className="overflow-hidden p-0">
         <div className="relative min-h-[560px]">
           <div className="absolute inset-0 bg-gradient-to-br from-pixelSky/30 via-cream/10 to-mint/30" />
           <div className="absolute left-4 top-4 z-[600] max-w-[calc(100%-2rem)]">
@@ -104,13 +113,13 @@ export function MapShell() {
 
           <LiveMap reports={filtered} focusedReportId={focusedReport?.id} onFocusReport={setFocusedReportId} />
         </div>
-      </Card>
+        </Card>
 
-      <div className="space-y-4">
+        <div className="space-y-4">
         {loading ? (
           <Card>
             <p className="font-semibold text-slate-900">Loading live reports...</p>
-            <p className="mt-2 text-sm text-slate-500">Pulling the latest incident feed from your configured backend.</p>
+            <p className="mt-2 text-sm text-slate-500">Pulling the latest requests and availability posts from your configured backend.</p>
           </Card>
         ) : null}
 
@@ -122,17 +131,36 @@ export function MapShell() {
             <button
               type="button"
               className="w-full text-left"
-              onClick={() => setFocusedReportId(report.id)}
+              onClick={() => {
+                setFocusedReportId(report.id);
+                setOpenReportId(report.id);
+              }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm text-slate-500">{report.organizationName ?? "Community report"}</p>
+                  <p className="text-sm text-slate-500">
+                    {report.organizationName ??
+                      (report.intent === "request" ? "Blood request" : "Availability post")}
+                  </p>
                   <h3 className="mt-1 text-lg font-semibold text-slate-900">{report.title}</h3>
                 </div>
-                <Badge className={report.isEmergency ? "bg-softCoral text-white" : "bg-pixelSky/40"}>
-                  {report.isEmergency ? "Emergency" : "Active"}
+                <Badge
+                  className={
+                    report.intent === "request"
+                      ? "bg-softCoral text-white"
+                      : "bg-pixelSky/45 text-slate-800"
+                  }
+                >
+                  {report.intent === "request"
+                    ? report.isEmergency
+                      ? "Urgent request"
+                      : "Request"
+                    : report.intent === "inventory_offer"
+                      ? "Bags available"
+                      : "Donor available"}
                 </Badge>
               </div>
+              <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Tap for full details</p>
               <p className="mt-3 text-sm text-slate-600">{report.description}</p>
               <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
                 <span>{report.availableBags} bags available</span>
@@ -146,11 +174,12 @@ export function MapShell() {
           <Card>
             <p className="font-semibold text-slate-900">No live reports found.</p>
             <p className="mt-2 text-sm text-slate-500">
-              Submit a new incident report or connect Supabase to start seeing realtime updates here.
+              Submit a new request or availability post, or connect Supabase to start seeing realtime updates here.
             </p>
           </Card>
         ) : null}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

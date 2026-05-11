@@ -21,15 +21,15 @@ export default function ReportsPage() {
   return (
     <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
       <Card>
-        <Badge className="mb-4 bg-pixelSky/35">Community Report Form</Badge>
+        <Badge className="mb-4 bg-pixelSky/35">Community Post Form</Badge>
         <ReportForm />
       </Card>
 
       <Card>
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <Badge className="mb-3 bg-mint/30">Open Emergency Feed</Badge>
-            <h2 className="text-2xl font-semibold text-slate-900">Active blood requests and availability posts</h2>
+            <Badge className="mb-3 bg-mint/30">Open Blood Feed</Badge>
+            <h2 className="text-2xl font-semibold text-slate-900">Active blood requests, donor offers, and supply posts</h2>
           </div>
           <Badge>{sortedReports.length} live</Badge>
         </div>
@@ -40,8 +40,20 @@ export default function ReportsPage() {
             <div key={report.id} className="rounded-[24px] border border-white/50 bg-white/75 p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-lg font-semibold text-slate-900">{report.title}</h3>
-                <Badge className={report.sourceType === "verified_source" ? "bg-mint/35" : "bg-white"}>
-                  {report.sourceType.replaceAll("_", " ")}
+                <Badge
+                  className={
+                    report.intent === "request"
+                      ? "bg-softCoral/15 text-softCoral"
+                      : "bg-pixelSky/35 text-slate-700"
+                  }
+                >
+                  {report.intent === "request"
+                    ? report.isEmergency
+                      ? "Urgent request"
+                      : "Request"
+                    : report.intent === "inventory_offer"
+                      ? "Blood bags available"
+                      : "Donor / volunteer available"}
                 </Badge>
               </div>
               <p className="mt-2 text-sm text-slate-500">{report.address}</p>
@@ -56,7 +68,7 @@ export default function ReportsPage() {
             <div className="rounded-[24px] border border-dashed border-white/50 bg-white/60 p-6">
               <p className="font-semibold text-slate-900">No reports yet.</p>
               <p className="mt-2 text-sm text-slate-500">
-                Your live incident feed is empty until a real report is submitted.
+                Your live feed is empty until someone posts a real request or availability update.
               </p>
             </div>
           ) : null}

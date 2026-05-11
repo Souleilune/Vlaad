@@ -1,7 +1,9 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { ChevronDown, Crosshair, MapPinned } from "lucide-react";
+import type { ReportIntent } from "@vlaad/shared";
 import { BLOOD_TYPES } from "@vlaad/shared";
 import { apiUrl } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,15 @@ type ReportFormProps = {
   onSubmitted?: () => void;
 };
 
+const ReportLocationPicker = dynamic(
+  () => import("@/components/reports/report-location-picker").then((module) => module.ReportLocationPicker),
+  { ssr: false }
+);
+
+const DEFAULT_REPORT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
 const initialForm = {
+  intent: "request" as ReportIntent,
   title: "",
   bloodType: "O+",
   organizationName: "",
@@ -37,9 +47,69 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [form, setForm] = useState(initialForm);
 
+  const intentMeta: Record<
+    ReportIntent,
+    {
+      label: string;
+      heading: string;
+      description: string;
+      titlePlaceholder: string;
+      quantityLabel: string;
+      quantityPlaceholder: string;
+      sourceType: "community" | "trusted_contributor" | "verified_source";
+      submitLabel: string;
+    }
+  > = {
+    request: {
+      label: "Need blood",
+      heading: "Blood request",
+      description: "Post when a patient or family urgently needs blood donations.",
+      titlePlaceholder: "Need O+ donors for St. Luke's",
+      quantityLabel: "Units or bags needed",
+      quantityPlaceholder: "How many are needed?",
+      sourceType: "community",
+      submitLabel: "Submit request"
+    },
+    donor_offer: {
+      label: "I can donate / volunteer",
+      heading: "Donor or volunteer offer",
+      description: "Post when you can donate blood or make yourself available to help.",
+      titlePlaceholder: "Available O+ donor in Quezon City",
+      quantityLabel: "People available",
+      quantityPlaceholder: "How many donors can respond?",
+      sourceType: "trusted_contributor",
+      submitLabel: "Submit offer"
+    },
+    inventory_offer: {
+      label: "Institution has blood bags",
+      heading: "Institution blood availability",
+      description: "Post when a hospital, blood bank, or center has blood bags available.",
+      titlePlaceholder: "Hospital blood bank has A+ bags available",
+      quantityLabel: "Available bags",
+      quantityPlaceholder: "How many bags are available?",
+      sourceType: "verified_source",
+      submitLabel: "Submit availability"
+    }
+  };
+
+  const activeIntent = intentMeta[form.intent];
+  const latitude = Number(form.latitude);
+  const longitude = Number(form.longitude);
+  const hasValidMapPoint = Number.isFinite(latitude) && Number.isFinite(longitude);
+
   const updateField = (field: keyof typeof form, value: string | boolean) => {
     setForm((current) => ({ ...current, [field]: value }));
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
+  };
+
+  const updateCoordinates = (point: { lat: number; lng: number }) => {
+    setForm((current) => ({
+      ...current,
+      latitude: point.lat.toFixed(6),
+      longitude: point.lng.toFixed(6)
+    }));
+    setLocationCaptured(true);
+    setFieldErrors((current) => ({ ...current, latitude: undefined, longitude: undefined }));
   };
 
   const validateForm = (): boolean => {
@@ -54,7 +124,7 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
     }
 
     if (form.description.trim().length < 8) {
-      nextErrors.description = "Add a little more detail so responders can understand the incident.";
+      nextErrors.description = "Add a little more detail so people can understand the post.";
     }
 
     if (Number.isNaN(Number(form.latitude)) || Number.isNaN(Number(form.longitude))) {
@@ -79,7 +149,7 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
     try {
       const expiresAt = form.expiresAt
         ? new Date(form.expiresAt).toISOString()
-        : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        : new Date(Date.now() + DEFAULT_REPORT_EXPIRY_MS).toISOString();
 
       const response = await fetch(apiUrl("/reports"), {
         method: "POST",
@@ -95,8 +165,8 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
           contactNumber: form.contactNumber || undefined,
           expiresAt,
           availableBags: Number(form.availableBags),
-          sourceType: "community",
-          isEmergency: form.isEmergency,
+          sourceType: activeIntent.sourceType,
+          isEmergency: form.intent === "request" ? form.isEmergency : false,
           nickname: form.nickname || undefined
         })
       });
@@ -147,15 +217,9 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
     setMessage(null);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        setForm((current) => ({
-          ...current,
-          latitude: coords.latitude.toFixed(6),
-          longitude: coords.longitude.toFixed(6)
-        }));
+        updateCoordinates({ lat: coords.latitude, lng: coords.longitude });
         setShowMoreFields(true);
-        setLocationCaptured(true);
-        setFieldErrors((current) => ({ ...current, latitude: undefined, longitude: undefined }));
-        setMessage("Location captured. You can submit now or review the coordinates in more details.");
+        setMessage("Location captured. You can drag it more precisely by clicking the map below.");
         setLocating(false);
       },
       () => {
@@ -169,15 +233,33 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="rounded-[24px] border border-softCoral/20 bg-softCoral/5 p-4">
-        <p className="text-sm font-medium text-slate-900">Quick incident report</p>
+        <p className="text-sm font-medium text-slate-900">{activeIntent.heading}</p>
         <p className="mt-1 text-sm text-slate-500">
-          Start with the essentials. Optional details can be added only if you have them.
+          {activeIntent.description} Start with the essentials. Optional details can be added if you have them.
         </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {(Object.keys(intentMeta) as ReportIntent[]).map((intent) => (
+          <button
+            key={intent}
+            type="button"
+            className={`rounded-[22px] border px-4 py-4 text-left transition ${
+              form.intent === intent
+                ? "border-softCoral/30 bg-softCoral/10 shadow-[0_12px_28px_rgba(251,113,133,0.12)]"
+                : "border-white/55 bg-white/75 hover:border-softCoral/20"
+            }`}
+            onClick={() => updateField("intent", intent)}
+          >
+            <p className="text-sm font-semibold text-slate-900">{intentMeta[intent].label}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">{intentMeta[intent].description}</p>
+          </button>
+        ))}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
         <Input
-          placeholder="Short title"
+          placeholder={activeIntent.titlePlaceholder}
           value={form.title}
           onChange={(event) => updateField("title", event.target.value)}
         />
@@ -204,21 +286,23 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
 
       <textarea
         className="min-h-28 w-full rounded-[24px] border border-white/60 bg-white/80 px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-softCoral/40"
-        placeholder="What is available or urgently needed? Include anything people should know."
+        placeholder="Describe what is needed or available, plus any instructions people should know."
         value={form.description}
         onChange={(event) => updateField("description", event.target.value)}
       />
       {fieldErrors.description ? <p className="text-sm text-softCoral">{fieldErrors.description}</p> : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-3 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={form.isEmergency}
-            onChange={(event) => updateField("isEmergency", event.target.checked)}
-          />
-          Mark this as an emergency incident
-        </label>
+        {form.intent === "request" ? (
+          <label className="flex items-center gap-3 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={form.isEmergency}
+              onChange={(event) => updateField("isEmergency", event.target.checked)}
+            />
+            Mark this request as urgent
+          </label>
+        ) : null}
         <Button type="button" variant="secondary" size="sm" onClick={fillMyLocation} disabled={locating}>
           <Crosshair className="mr-2 h-4 w-4" />
           {locating ? "Finding location..." : "Use my location"}
@@ -272,6 +356,13 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
           {fieldErrors.latitude || fieldErrors.longitude ? (
             <p className="text-sm text-softCoral">{fieldErrors.latitude ?? fieldErrors.longitude}</p>
           ) : null}
+          {hasValidMapPoint ? (
+            <ReportLocationPicker
+              latitude={latitude}
+              longitude={longitude}
+              onPick={updateCoordinates}
+            />
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               type="datetime-local"
@@ -281,27 +372,28 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
             <Input
               type="number"
               min="0"
-              placeholder="Available bags"
+              placeholder={activeIntent.quantityPlaceholder}
               value={form.availableBags}
               onChange={(event) => updateField("availableBags", event.target.value)}
             />
           </div>
+          <p className="text-xs text-slate-500">{activeIntent.quantityLabel}</p>
           {fieldErrors.expiresAt || fieldErrors.availableBags ? (
             <p className="text-sm text-softCoral">{fieldErrors.expiresAt ?? fieldErrors.availableBags}</p>
           ) : null}
           <div className="rounded-2xl bg-slate-50/80 p-3 text-xs text-slate-500">
             <MapPinned className="mr-2 inline h-4 w-4" />
-            If you skip expiry, the report will default to 24 hours.
+            If you skip expiry, the report will stay live for 7 days by default.
           </div>
         </div>
       </details>
 
       <Button className="w-full" disabled={submitting}>
-        {submitting ? "Submitting..." : "Submit report"}
+        {submitting ? "Submitting..." : activeIntent.submitLabel}
       </Button>
       {message ? <p className="text-sm text-slate-600">{message}</p> : null}
       <p className="text-xs text-slate-500">
-        Anonymous reports are allowed, cooldown-protected, and clearly labeled as community reports.
+        Anonymous posts are allowed, cooldown-protected, and shown on the live public feed.
       </p>
     </form>
   );

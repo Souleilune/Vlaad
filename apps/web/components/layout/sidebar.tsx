@@ -11,16 +11,8 @@ const items = [
 export function Sidebar() {
   return (
     <aside className="hidden shrink-0 lg:block">
-      <div className="group sticky top-6 w-[64px] overflow-hidden rounded-[32px] border border-white/40 bg-white/70 px-2 py-5 shadow-glass backdrop-blur-xl transition-all duration-300 hover:w-72 hover:px-4">
-        <div className="mb-5 flex min-h-12 items-center justify-center group-hover:justify-start">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-softCoral/12 font-display text-lg text-slate-900 ring-1 ring-softCoral/10">
-            V
-          </div>
-          <div className="ml-4 min-w-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-            <p className="font-display text-xl text-slate-900">VLAAD</p>
-            <p className="mt-1 text-sm text-slate-500">Fast community response for blood emergencies.</p>
-          </div>
-        </div>
+      <div className="group sticky top-6 w-[72px] overflow-hidden rounded-[32px] border border-white/40 bg-white/70 px-2 py-5 shadow-glass backdrop-blur-xl transition-all duration-300 hover:w-72 hover:px-4">
+       
 
         <nav className="space-y-3">
           {items.map((item) => {
@@ -30,7 +22,7 @@ export function Sidebar() {
                 href={item.href}
                 key={item.href}
                 className={cn(
-                  "mx-auto flex w-12 items-center justify-center gap-3 rounded-[22px] border border-transparent px-0 py-2 text-sm font-medium text-slate-600 transition hover:border-softCoral/20 hover:bg-softCoral/10 hover:text-slate-900 group-hover:mx-0 group-hover:w-full group-hover:justify-start group-hover:px-2"
+                  "mx-auto flex w-12 items-center justify-center gap-0 rounded-[22px] border border-transparent px-0 py-2 text-sm font-medium text-slate-600 transition hover:border-softCoral/20 hover:bg-softCoral/10 hover:text-slate-900 group-hover:mx-0 group-hover:w-full group-hover:justify-start group-hover:gap-3 group-hover:px-2"
                 )}
                 title={item.label}
               >

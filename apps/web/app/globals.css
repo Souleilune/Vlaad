@@ -109,16 +109,16 @@ body {
 }
 
 .vlaad-map-marker--community {
-  background: linear-gradient(135deg, #89cff0, #fff8e7);
+  background: linear-gradient(135deg, #ff8f8f, #ffe1e1);
 }
 
 .vlaad-map-marker--trusted {
-  background: linear-gradient(135deg, #ffd166, #fff8e7);
+  background: linear-gradient(135deg, #89cff0, #e7f7ff);
 }
 
 .vlaad-map-marker--verified {
-  background: linear-gradient(135deg, #95d5b2, #e8fff4);
-  box-shadow: 0 0 0 8px rgba(149, 213, 178, 0.22), 0 12px 28px rgba(15, 23, 42, 0.2);
+  background: linear-gradient(135deg, #5bbcff, #d9f1ff);
+  box-shadow: 0 0 0 8px rgba(91, 188, 255, 0.2), 0 12px 28px rgba(15, 23, 42, 0.2);
 }
 
 .vlaad-map-marker--emergency {

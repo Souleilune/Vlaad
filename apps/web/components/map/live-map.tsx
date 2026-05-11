@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import L, { type DivIcon } from "leaflet";
 import { Crosshair, LocateFixed, Navigation, Waves } from "lucide-react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
@@ -16,6 +16,18 @@ type LiveMapProps = {
 
 const MANILA_CENTER: [number, number] = [14.5995, 120.9842];
 
+function canAnimateMap(map: L.Map) {
+  return map.getContainer().isConnected;
+}
+
+function safeFlyTo(map: L.Map, center: [number, number], zoom: number, duration: number) {
+  if (!canAnimateMap(map)) {
+    return;
+  }
+
+  map.flyTo(center, zoom, { duration });
+}
+
 function hasMapLocation(report: BloodReport | undefined): report is BloodReport {
   return Boolean(
     report &&
@@ -26,17 +38,25 @@ function hasMapLocation(report: BloodReport | undefined): report is BloodReport 
 }
 
 function createMarkerIcon(report: BloodReport): DivIcon {
-  const tone = report.isEmergency
-    ? "vlaad-map-marker--emergency"
-    : report.sourceType === "verified_source"
-      ? "vlaad-map-marker--verified"
-      : report.sourceType === "trusted_contributor"
-        ? "vlaad-map-marker--trusted"
-        : "vlaad-map-marker--community";
+  const tone =
+    report.intent === "request"
+      ? report.isEmergency
+        ? "vlaad-map-marker--emergency"
+        : "vlaad-map-marker--community"
+      : report.intent === "inventory_offer"
+        ? "vlaad-map-marker--verified"
+        : "vlaad-map-marker--trusted";
+
+  const intentLabel =
+    report.intent === "request"
+      ? "Need blood"
+      : report.intent === "inventory_offer"
+        ? "Blood bags available"
+        : "Donor available";
 
   return L.divIcon({
     className: "vlaad-div-icon",
-    html: `<div class="vlaad-map-marker ${tone}">${report.bloodType}</div>`,
+    html: `<div class="vlaad-map-marker ${tone}">${report.bloodType}<span class="sr-only">${intentLabel}</span></div>`,
     iconSize: [42, 52],
     iconAnchor: [21, 50],
     popupAnchor: [0, -44]
@@ -47,7 +67,7 @@ function MapViewport({ center, zoom }: { center: [number, number]; zoom: number 
   const map = useMap();
 
   useEffect(() => {
-    map.flyTo(center, zoom, { duration: 1.2 });
+    safeFlyTo(map, center, zoom, 1.2);
   }, [center, map, zoom]);
 
   return null;
@@ -61,9 +81,7 @@ function FocusedReportSync({ report }: { report?: BloodReport }) {
       return;
     }
 
-    map.flyTo([report.location.lat, report.location.lng], Math.max(map.getZoom(), 13), {
-      duration: 1
-    });
+    safeFlyTo(map, [report.location.lat, report.location.lng], Math.max(map.getZoom(), 13), 1);
   }, [map, report]);
 
   return null;
@@ -76,6 +94,13 @@ function UserLocationControl({
 }) {
   const map = useMap();
   const [locating, setLocating] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const handleLocate = () => {
     if (!navigator.geolocation) {
@@ -85,12 +110,20 @@ function UserLocationControl({
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
+        if (!isMountedRef.current) {
+          return;
+        }
+
         const point = { lat: coords.latitude, lng: coords.longitude };
         onLocationFound(point);
-        map.flyTo([point.lat, point.lng], 13, { duration: 1.2 });
+        safeFlyTo(map, [point.lat, point.lng], 13, 1.2);
         setLocating(false);
       },
-      () => setLocating(false),
+      () => {
+        if (isMountedRef.current) {
+          setLocating(false);
+        }
+      },
       { enableHighAccuracy: true, timeout: 10_000 }
     );
   };
@@ -179,13 +212,37 @@ export function LiveMap({ reports, focusedReportId, onFocusReport }: LiveMapProp
             <Popup>
               <div className="min-w-56">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <Badge className={report.sourceType === "verified_source" ? "bg-mint/30" : "bg-white"}>
-                    {report.sourceType.replaceAll("_", " ")}
+                  <Badge
+                    className={
+                      report.intent === "request"
+                        ? "h-14 rounded-[16px] bg-softCoral/15 px-4 text-softCoral"
+                        : "h-14 rounded-[16px] bg-pixelSky/35 px-4 text-slate-700"
+                    }
+                  >
+                    {report.intent === "request"
+                      ? "Need blood"
+                      : report.intent === "inventory_offer"
+                        ? "Blood bags available"
+                        : "Donor / volunteer available"}
                   </Badge>
-                  <span className="font-display text-lg text-slate-900">{report.bloodType}</span>
+                  <span
+                    className={
+                      report.intent === "request"
+                        ? "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-softCoral/25 bg-softCoral px-4 font-display text-xl text-white shadow-[0_10px_22px_rgba(251,113,133,0.22)]"
+                        : "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-retroYellow/40 bg-retroYellow px-4 font-display text-xl text-slate-900 shadow-[0_10px_22px_rgba(255,209,102,0.24)]"
+                    }
+                  >
+                    {report.bloodType}
+                  </span>
                 </div>
                 <p className="font-semibold text-slate-900">{report.title}</p>
                 <p className="mt-2 text-sm text-slate-500">{report.address}</p>
+                {report.nickname || report.contactNumber ? (
+                  <div className="mt-3 space-y-1 text-sm text-slate-600">
+                    {report.nickname ? <p><span className="font-medium text-slate-900">Nickname:</span> {report.nickname}</p> : null}
+                    {report.contactNumber ? <p><span className="font-medium text-slate-900">Contact:</span> {report.contactNumber}</p> : null}
+                  </div>
+                ) : null}
                 <div className="mt-4 flex gap-2">
                   <Button variant="secondary" size="sm" onClick={() => onFocusReport(report.id)}>
                     <Crosshair className="mr-2 h-4 w-4" />

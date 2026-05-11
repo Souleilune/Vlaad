@@ -3,7 +3,21 @@ import type { BloodReport } from "@vlaad/shared";
 import { supabaseAdmin } from "../lib/supabase";
 import { ApiError } from "../utils/api-error";
 
+function getIntentFromSourceType(sourceType: BloodReport["sourceType"]): BloodReport["intent"] {
+  if (sourceType === "trusted_contributor") {
+    return "donor_offer";
+  }
+
+  if (sourceType === "verified_source") {
+    return "inventory_offer";
+  }
+
+  return "request";
+}
+
 function mapRowToReport(row: Record<string, unknown>): BloodReport {
+  const sourceType = row.source_type as BloodReport["sourceType"];
+
   return {
     id: String(row.id),
     title: String(row.title),
@@ -16,11 +30,13 @@ function mapRowToReport(row: Record<string, unknown>): BloodReport {
       lng: Number(row.longitude)
     },
     contactNumber: (row.contact_number as string | null | undefined) ?? null,
+    nickname: (row.nickname as string | null | undefined) ?? null,
     imageUrls: [],
     expiresAt: String(row.expires_at),
     availableBags: Number(row.available_bags),
     verificationStatus: row.verification_status as BloodReport["verificationStatus"],
-    sourceType: row.source_type as BloodReport["sourceType"],
+    sourceType,
+    intent: getIntentFromSourceType(sourceType),
     isEmergency: Boolean(row.is_emergency),
     createdAt: String(row.created_at)
   };

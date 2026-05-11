@@ -31,6 +31,14 @@ function normalizeReport(report: unknown): BloodReport | null {
     return null;
   }
 
+  const sourceType = (row.sourceType ?? row.source_type ?? "community") as BloodReport["sourceType"];
+  const intent =
+    sourceType === "trusted_contributor"
+      ? "donor_offer"
+      : sourceType === "verified_source"
+        ? "inventory_offer"
+        : "request";
+
   return {
     id: String(row.id ?? ""),
     title: String(row.title ?? ""),
@@ -40,11 +48,13 @@ function normalizeReport(report: unknown): BloodReport | null {
     address: String(row.address ?? ""),
     location: rawLocation,
     contactNumber: (row.contactNumber ?? row.contact_number ?? null) as string | null,
+    nickname: (row.nickname ?? null) as string | null,
     imageUrls: Array.isArray(row.imageUrls) ? (row.imageUrls as string[]) : [],
     expiresAt: String(row.expiresAt ?? row.expires_at ?? ""),
     availableBags: Number(row.availableBags ?? row.available_bags ?? 0),
     verificationStatus: (row.verificationStatus ?? row.verification_status ?? "pending") as BloodReport["verificationStatus"],
-    sourceType: (row.sourceType ?? row.source_type ?? "community") as BloodReport["sourceType"],
+    sourceType,
+    intent,
     isEmergency: Boolean(row.isEmergency ?? row.is_emergency),
     createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString())
   } satisfies BloodReport;

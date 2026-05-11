@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { ArrowUpRight, HeartPulse, ShieldCheck, Siren } from "lucide-react";
 import { apiUrl } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,35 +56,101 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-10">
-      <Card className="w-full">
-        <Badge className="mb-4 bg-pixelSky/35">Sign in</Badge>
-        <h1 className="text-3xl font-semibold text-slate-900">Login to Vlaad</h1>
-        <p className="mt-2 text-sm text-slate-500">Use this page to test the live login endpoint.</p>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(186,230,253,0.65),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(252,165,165,0.3),_transparent_30%),linear-gradient(135deg,_#fffaf2_0%,_#f8fbff_46%,_#fff4ed_100%)] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <Card className="relative overflow-hidden border-white/50 bg-slate-900 px-7 py-8 text-white lg:px-10 lg:py-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(125,211,252,0.22),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(251,146,60,0.28),_transparent_28%)]" />
+          <div className="relative flex h-full flex-col justify-between">
+            <div>
+              <Badge className="border border-white/15 bg-white/10 text-white">User Access</Badge>
+              <h1 className="mt-5 max-w-md font-display text-5xl leading-[1.02] text-white">
+                Step back into the live emergency network.
+              </h1>
+              <p className="mt-5 max-w-lg text-base leading-7 text-white/72">
+                Signed-in users can track requests, manage reports, and keep their donor profile tied to the
+                live feed instead of browsing as a guest.
+              </p>
+            </div>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <Input
-            placeholder="Email"
-            type="email"
-            value={form.email}
-            onChange={(event) => updateField("email", event.target.value)}
-          />
-          <Input
-            placeholder="Password"
-            type="password"
-            value={form.password}
-            onChange={(event) => updateField("password", event.target.value)}
-          />
-          <Button className="w-full" disabled={submitting}>
-            {submitting ? "Signing in..." : "Login"}
-          </Button>
-          {message ? <p className="text-sm text-slate-600">{message}</p> : null}
-        </form>
+            {/* <div className="mt-10 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+                <HeartPulse className="h-5 w-5 text-retroYellow" />
+                <p className="mt-4 text-sm font-semibold">Live requests</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">Return to nearby cases without rebuilding context.</p>
+              </div>
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+                <ShieldCheck className="h-5 w-5 text-mint" />
+                <p className="mt-4 text-sm font-semibold">Verified identity</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">Keep your account-linked profile and role intact.</p>
+              </div>
+              <div className="rounded-[24px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+                <Siren className="h-5 w-5 text-softCoral" />
+                <p className="mt-4 text-sm font-semibold">Fast response</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">Jump back in when an urgent request needs attention.</p>
+              </div>
+            </div> */}
+          </div>
+        </Card>
 
-        <p className="mt-6 text-sm text-slate-500">
-          Need an account first? <Link className="text-softCoral" href="/register">Register here</Link>.
-        </p>
-      </Card>
+        <Card className="flex items-center border-white/50 bg-white/82 p-6 sm:p-8">
+          <div className="w-full">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Badge className="bg-pixelSky/35 text-slate-700">Sign in</Badge>
+                <h2 className="mt-4 text-3xl font-semibold text-slate-900">Login to Vlaad</h2>
+                <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
+                  Use your registered account to load your profile, reports, and authenticated tools.
+                </p>
+              </div>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-softCoral/25 hover:text-slate-900"
+              >
+                Public home
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
+                <Input
+                  className="h-12 bg-white"
+                  placeholder="donor@hospital.org"
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateField("email", event.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-700">Password</span>
+                <Input
+                  className="h-12 bg-white"
+                  placeholder="Enter your password"
+                  type="password"
+                  value={form.password}
+                  onChange={(event) => updateField("password", event.target.value)}
+                />
+              </label>
+              <Button className="mt-2 h-12 w-full" disabled={submitting}>
+                {submitting ? "Signing in..." : "Enter profile"}
+              </Button>
+              {message ? (
+                <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  {message}
+                </div>
+              ) : null}
+            </form>
+
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5">
+              <p className="text-sm text-slate-500">
+                Need an account first? <Link className="font-medium text-softCoral" href="/register">Register here</Link>.
+              </p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Guest map stays available</p>
+            </div>
+          </div>
+        </Card>
+      </div>
     </main>
   );
 }

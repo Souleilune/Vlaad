@@ -36,22 +36,22 @@ export function PublicHome() {
         </div>
       </header>
 
-      <section aria-label="Public blood availability map">
+      <section aria-label="Public blood request and availability map">
         <MapShell />
       </section>
 
-      <section className="mt-6" aria-label="Incident report action">
+      <section className="mt-6" aria-label="Community posting action">
         <Card className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <Badge className="mb-3 bg-pixelSky/35 text-slate-700">Community Reporting</Badge>
-            <h2 className="text-2xl font-semibold text-slate-900">Need to add a new blood availability incident?</h2>
+            <h2 className="text-2xl font-semibold text-slate-900">Need to post a request, donor offer, or blood bag availability?</h2>
             <p className="mt-2 text-sm text-slate-500">
-              Reports stay accessible to guests and help the live public feed update faster.
+              Guests can share urgent needs, volunteer donor availability, or institutional blood supply updates on the public feed.
             </p>
           </div>
           <Button variant="pixel" size="lg" onClick={() => setReportModalOpen(true)}>
             <ClipboardPlus className="mr-2 h-4 w-4" />
-            Report an Incident
+            Create a Post
           </Button>
         </Card>
       </section>

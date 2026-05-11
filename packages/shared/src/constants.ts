@@ -6,6 +6,12 @@ export const REPORT_SOURCE_TYPES = [
   "verified_source"
 ] as const;
 
+export const REPORT_INTENTS = [
+  "request",
+  "donor_offer",
+  "inventory_offer"
+] as const;
+
 export const URGENCY_LEVELS = ["low", "medium", "high", "critical"] as const;
 
 export const REPORT_STATUSES = ["pending", "verified", "rejected", "expired"] as const;

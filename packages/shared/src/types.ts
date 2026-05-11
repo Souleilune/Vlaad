@@ -1,5 +1,6 @@
 import type {
   BLOOD_TYPES,
+  REPORT_INTENTS,
   REPORT_SOURCE_TYPES,
   REPORT_STATUSES,
   URGENCY_LEVELS,
@@ -7,6 +8,7 @@ import type {
 } from "./constants";
 
 export type BloodType = (typeof BLOOD_TYPES)[number];
+export type ReportIntent = (typeof REPORT_INTENTS)[number];
 export type ReportSourceType = (typeof REPORT_SOURCE_TYPES)[number];
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 export type UrgencyLevel = (typeof URGENCY_LEVELS)[number];
@@ -26,11 +28,13 @@ export interface BloodReport {
   address: string;
   location: GeoPoint;
   contactNumber?: string | null;
+  nickname?: string | null;
   imageUrls: string[];
   expiresAt: string;
   availableBags: number;
   verificationStatus: ReportStatus;
   sourceType: ReportSourceType;
+  intent: ReportIntent;
   isEmergency: boolean;
   createdAt: string;
 }

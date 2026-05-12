@@ -8,7 +8,7 @@ export function StatsGrid({ metrics }: { metrics: DashboardMetric[] }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {metrics.map((metric, index) => {
-        const Icon = icons[index % icons.length];
+        const Icon = icons[index % icons.length] ?? HeartPulse;
 
         return (
           <Card key={metric.label} className="relative overflow-hidden">

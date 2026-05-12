@@ -42,7 +42,7 @@ function normalizeReport(report: unknown): BloodReport | null {
   return {
     id: String(row.id ?? ""),
     title: String(row.title ?? ""),
-    bloodType: row.bloodType ?? row.blood_type,
+    bloodType: (row.bloodType ?? row.blood_type ?? "O+") as BloodReport["bloodType"],
     organizationName: (row.organizationName ?? row.organization_name ?? null) as string | null,
     description: String(row.description ?? ""),
     address: String(row.address ?? ""),

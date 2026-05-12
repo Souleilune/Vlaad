@@ -3,13 +3,15 @@
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { clearAuthToken, readStoredSession } from "@/lib/auth";
 
 export function LogoutButton() {
   const router = useRouter();
 
   const handleLogout = () => {
-    window.localStorage.removeItem("vlaad_token");
-    router.push("/");
+    const session = readStoredSession();
+    clearAuthToken();
+    router.push(session?.role === "admin" ? "/admin/login" : "/");
     router.refresh();
   };
 

@@ -150,8 +150,10 @@ export function LiveMap({ reports, focusedReportId, onFocusReport }: LiveMapProp
       return [focusedReport.location.lat, focusedReport.location.lng];
     }
 
-    if (safeReports.length > 0) {
-      return [safeReports[0].location.lat, safeReports[0].location.lng];
+    const firstReport = safeReports[0];
+
+    if (firstReport) {
+      return [firstReport.location.lat, firstReport.location.lng];
     }
 
     return MANILA_CENTER;

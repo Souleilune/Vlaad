@@ -14,7 +14,7 @@ reportsRouter.get("/", asyncHandler(async (_req, res) => {
 }));
 
 reportsRouter.get("/:id", asyncHandler(async (req, res) => {
-  const item = await getReportById(req.params.id);
+  const item = await getReportById(String(req.params.id));
 
   if (!item) {
     return res.status(404).json({ message: "Blood report not found" });

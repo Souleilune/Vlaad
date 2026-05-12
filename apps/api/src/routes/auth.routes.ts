@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { supabaseAdmin } from "../lib/supabase";
 import { requireAuth } from "../middleware/auth";
+import { getUserRole } from "../services/admin.service";
 import { validateBody } from "../middleware/validate";
 import { asyncHandler } from "../utils/async-handler";
 import { ApiError } from "../utils/api-error";
@@ -50,7 +51,8 @@ authRouter.post("/register", validateBody(registerSchema), asyncHandler(async (r
     throw new ApiError(500, "User created but role setup failed.", roleError.message);
   }
 
-  const payload = { sub: data.user.id, email: req.body.email, role: "user" as const };
+  const role = await getUserRole(data.user.id);
+  const payload = { sub: data.user.id, email: req.body.email, role };
   const token = jwt.sign(payload, env.SUPABASE_JWT_SECRET, { expiresIn: "7d" });
   res.status(201).json({ message: "Registration successful.", token, user: payload });
 }));
@@ -69,7 +71,8 @@ authRouter.post("/login", validateBody(loginSchema), asyncHandler(async (req, re
     throw new ApiError(401, error?.message ?? "Invalid email or password.");
   }
 
-  const payload = { sub: data.user.id, email: data.user.email ?? req.body.email, role: "user" as const };
+  const role = await getUserRole(data.user.id);
+  const payload = { sub: data.user.id, email: data.user.email ?? req.body.email, role };
   const token = jwt.sign(payload, env.SUPABASE_JWT_SECRET, { expiresIn: "7d" });
   res.json({ token, user: payload });
 }));
@@ -105,11 +108,13 @@ authRouter.get("/me", requireAuth, asyncHandler(async (req, res) => {
     throw new ApiError(404, "Profile not found for the authenticated user.");
   }
 
+  const role = await getUserRole(req.auth!.sub);
+
   res.json({
     user: {
       id: profile.id,
       email: req.auth!.email ?? null,
-      role: req.auth!.role,
+      role,
       fullName: profile.full_name,
       bloodType: profile.blood_type,
       city: profile.city

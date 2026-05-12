@@ -1,15 +1,27 @@
+"use client";
+
 import { Bell, Search } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function Topbar() {
+  const pathname = usePathname();
+  const isAdmin = pathname.startsWith("/admin");
+
   return (
     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <Badge className="mb-3 bg-mint/30 text-slate-700">Realtime Blood Feed</Badge>
-        <h1 className="text-3xl font-semibold text-slate-900">Track urgent needs and available blood in one live map.</h1>
+        <Badge className={`mb-3 ${isAdmin ? "bg-softCoral/15 text-slate-800" : "bg-mint/30 text-slate-700"}`}>
+          {isAdmin ? "Admin Control Room" : "Realtime Blood Feed"}
+        </Badge>
+        <h1 className="text-3xl font-semibold text-slate-900">
+          {isAdmin
+            ? "Moderate reports, manage operators, and monitor emergency analytics."
+            : "Track urgent needs and available blood in one live map."}
+        </h1>
       </div>
 
       <div className="flex items-center gap-3">

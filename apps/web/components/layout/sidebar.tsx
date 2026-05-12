@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Bell, Map, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { readStoredSession } from "@/lib/auth";
 
 const items = [
   { href: "/map", label: "Live Map", icon: Map },
@@ -9,13 +13,21 @@ const items = [
 ];
 
 export function Sidebar() {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    setIsAdmin(readStoredSession()?.role === "admin");
+  }, []);
+
+  const navItems = isAdmin ? [...items, { href: "/admin", label: "Admin", icon: UserRound }] : items;
+
   return (
     <aside className="hidden shrink-0 lg:block">
       <div className="group sticky top-6 w-[72px] overflow-hidden rounded-[32px] border border-white/40 bg-white/70 px-2 py-5 shadow-glass backdrop-blur-xl transition-all duration-300 hover:w-72 hover:px-4">
        
 
         <nav className="space-y-3">
-          {items.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link

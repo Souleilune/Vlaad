@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import L, { type DivIcon } from "leaflet";
-import { Crosshair, LocateFixed, Navigation, Waves } from "lucide-react";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { LocateFixed, Waves } from "lucide-react";
 import type { BloodReport, GeoPoint } from "@vlaad/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,18 +14,7 @@ type LiveMapProps = {
 };
 
 const MANILA_CENTER: [number, number] = [14.5995, 120.9842];
-
-function canAnimateMap(map: L.Map) {
-  return map.getContainer().isConnected;
-}
-
-function safeFlyTo(map: L.Map, center: [number, number], zoom: number, duration: number) {
-  if (!canAnimateMap(map)) {
-    return;
-  }
-
-  map.flyTo(center, zoom, { duration });
-}
+const MAP_ZOOM = 12;
 
 function hasMapLocation(report: BloodReport | undefined): report is BloodReport {
   return Boolean(
@@ -63,84 +51,71 @@ function createMarkerIcon(report: BloodReport): DivIcon {
   });
 }
 
-function MapViewport({ center, zoom }: { center: [number, number]; zoom: number }) {
-  const map = useMap();
+function getPopupContent(report: BloodReport) {
+  const badgeLabel =
+    report.intent === "request"
+      ? "Need blood"
+      : report.intent === "inventory_offer"
+        ? "Blood bags available"
+        : "Donor / volunteer available";
 
-  useEffect(() => {
-    safeFlyTo(map, center, zoom, 1.2);
-  }, [center, map, zoom]);
+  const badgeClasses =
+    report.intent === "request"
+      ? "h-14 rounded-[16px] bg-softCoral/15 px-4 text-softCoral"
+      : "h-14 rounded-[16px] bg-pixelSky/35 px-4 text-slate-700";
 
-  return null;
-}
+  const bloodTypeClasses =
+    report.intent === "request"
+      ? "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-softCoral/25 bg-softCoral px-4 font-display text-xl text-white shadow-[0_10px_22px_rgba(251,113,133,0.22)]"
+      : "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-retroYellow/40 bg-retroYellow px-4 font-display text-xl text-slate-900 shadow-[0_10px_22px_rgba(255,209,102,0.24)]";
 
-function FocusedReportSync({ report }: { report?: BloodReport }) {
-  const map = useMap();
+  const contactBlock =
+    report.nickname || report.contactNumber
+      ? `<div class="mt-3 space-y-1 text-sm text-slate-600">
+          ${report.nickname ? `<p><span class="font-medium text-slate-900">Nickname:</span> ${report.nickname}</p>` : ""}
+          ${report.contactNumber ? `<p><span class="font-medium text-slate-900">Contact:</span> ${report.contactNumber}</p>` : ""}
+        </div>`
+      : "";
 
-  useEffect(() => {
-    if (!report) {
-      return;
-    }
-
-    safeFlyTo(map, [report.location.lat, report.location.lng], Math.max(map.getZoom(), 13), 1);
-  }, [map, report]);
-
-  return null;
-}
-
-function UserLocationControl({
-  onLocationFound
-}: {
-  onLocationFound: (point: GeoPoint) => void;
-}) {
-  const map = useMap();
-  const [locating, setLocating] = useState(false);
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  const handleLocate = () => {
-    if (!navigator.geolocation) {
-      return;
-    }
-
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        if (!isMountedRef.current) {
-          return;
-        }
-
-        const point = { lat: coords.latitude, lng: coords.longitude };
-        onLocationFound(point);
-        safeFlyTo(map, [point.lat, point.lng], 13, 1.2);
-        setLocating(false);
-      },
-      () => {
-        if (isMountedRef.current) {
-          setLocating(false);
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10_000 }
-    );
-  };
-
-  return (
-    <div className="absolute right-4 top-4 z-[500]">
-      <Button variant="secondary" size="sm" onClick={handleLocate} disabled={locating}>
-        <LocateFixed className="mr-2 h-4 w-4" />
-        {locating ? "Locating..." : "My location"}
-      </Button>
+  return `
+    <div class="min-w-56" data-report-popup="${report.id}">
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <span class="inline-flex items-center ${badgeClasses}">${badgeLabel}</span>
+        <span class="${bloodTypeClasses}">${report.bloodType}</span>
+      </div>
+      <p class="font-semibold text-slate-900">${report.title}</p>
+      <p class="mt-2 text-sm text-slate-500">${report.address}</p>
+      ${contactBlock}
+      <div class="mt-4 flex gap-2">
+        <button
+          type="button"
+          data-focus-report="${report.id}"
+          class="inline-flex h-9 items-center justify-center rounded-xl border border-white/40 bg-white/70 px-3 text-sm font-semibold text-slate-700 backdrop-blur-xl transition hover:bg-white"
+        >
+          Focus
+        </button>
+        <a
+          class="inline-flex h-9 items-center justify-center rounded-xl border border-softCoral/80 bg-[#fff1ec] px-3 text-sm font-semibold text-slate-900 shadow-[4px_4px_0px_0px_rgba(251,113,133,0.42)] transition hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-[#ffe7e1] hover:shadow-none"
+          href="https://www.openstreetmap.org/?mlat=${report.location.lat}&mlon=${report.location.lng}#map=15/${report.location.lat}/${report.location.lng}"
+          rel="noreferrer"
+          target="_blank"
+        >
+          Open
+        </a>
+      </div>
     </div>
-  );
+  `;
 }
 
 export function LiveMap({ reports, focusedReportId, onFocusReport }: LiveMapProps) {
   const [userLocation, setUserLocation] = useState<GeoPoint | null>(null);
-  const [mapReady, setMapReady] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const reportLayerRef = useRef<L.LayerGroup | null>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
 
   const safeReports = useMemo(() => reports.filter((report) => hasMapLocation(report)), [reports]);
   const focusedReport = safeReports.find((report) => report.id === focusedReportId);
@@ -151,7 +126,6 @@ export function LiveMap({ reports, focusedReportId, onFocusReport }: LiveMapProp
     }
 
     const firstReport = safeReports[0];
-
     if (firstReport) {
       return [firstReport.location.lat, firstReport.location.lng];
     }
@@ -159,8 +133,168 @@ export function LiveMap({ reports, focusedReportId, onFocusReport }: LiveMapProp
     return MANILA_CENTER;
   }, [focusedReport, safeReports]);
 
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container || mapRef.current) {
+      return;
+    }
+
+    const map = L.map(container, {
+      center: defaultCenter,
+      zoom: MAP_ZOOM,
+      zoomControl: false,
+      scrollWheelZoom: true
+    });
+
+    const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+
+    tileLayer.addTo(map);
+
+    mapRef.current = map;
+    tileLayerRef.current = tileLayer;
+    reportLayerRef.current = L.layerGroup().addTo(map);
+
+    const handleLocationFound = (event: L.LocationEvent) => {
+      const point = { lat: event.latlng.lat, lng: event.latlng.lng };
+      setUserLocation(point);
+      setLocating(false);
+      setLocationError(null);
+      map.flyTo([point.lat, point.lng], 13, { duration: 1.2 });
+    };
+
+    const handleLocationError = (event: L.ErrorEvent) => {
+      setLocating(false);
+      setLocationError(event.message || "Unable to access your location.");
+    };
+
+    map.on("locationfound", handleLocationFound);
+    map.on("locationerror", handleLocationError);
+
+    return () => {
+      map.off("locationfound", handleLocationFound);
+      map.off("locationerror", handleLocationError);
+      reportLayerRef.current?.clearLayers();
+      reportLayerRef.current = null;
+      tileLayerRef.current = null;
+      userMarkerRef.current = null;
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [defaultCenter]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const reportLayer = reportLayerRef.current;
+
+    if (!map || !reportLayer) {
+      return;
+    }
+
+    reportLayer.clearLayers();
+
+    safeReports.forEach((report) => {
+      const marker = L.marker([report.location.lat, report.location.lng], {
+        icon: createMarkerIcon(report)
+      });
+
+      marker.bindPopup(getPopupContent(report));
+      marker.on("click", () => onFocusReport(report.id));
+      marker.on("popupopen", () => {
+        const popupRoot = document.querySelector(`[data-report-popup="${report.id}"]`);
+        const focusButton = popupRoot?.querySelector<HTMLButtonElement>(`[data-focus-report="${report.id}"]`);
+
+        if (focusButton) {
+          focusButton.onclick = () => onFocusReport(report.id);
+        }
+      });
+
+      marker.addTo(reportLayer);
+    });
+  }, [onFocusReport, safeReports]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    map.flyTo(defaultCenter, MAP_ZOOM, { duration: 1.2 });
+  }, [defaultCenter]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !focusedReport) {
+      return;
+    }
+
+    map.flyTo([focusedReport.location.lat, focusedReport.location.lng], Math.max(map.getZoom(), 13), {
+      duration: 1
+    });
+  }, [focusedReport]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    if (!userLocation) {
+      if (userMarkerRef.current) {
+        map.removeLayer(userMarkerRef.current);
+        userMarkerRef.current = null;
+      }
+      return;
+    }
+
+    const markerIcon = L.divIcon({
+      className: "vlaad-div-icon",
+      html: '<div class="vlaad-map-marker vlaad-map-marker--trusted">YOU</div>',
+      iconSize: [42, 52],
+      iconAnchor: [21, 50]
+    });
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLatLng([userLocation.lat, userLocation.lng]);
+      userMarkerRef.current.setIcon(markerIcon);
+    } else {
+      userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], {
+        icon: markerIcon
+      })
+        .addTo(map)
+        .bindPopup("You are here.");
+    }
+  }, [userLocation]);
+
+  const handleLocate = () => {
+    const map = mapRef.current;
+
+    if (!map) {
+      setLocationError("Map is still loading.");
+      return;
+    }
+
+    if (!("geolocation" in navigator)) {
+      setLocationError("Geolocation is not supported in this browser.");
+      return;
+    }
+
+    setLocating(true);
+    setLocationError(null);
+    map.locate({
+      setView: false,
+      enableHighAccuracy: false,
+      timeout: 8000,
+      maximumAge: 60_000
+    });
+  };
+
   return (
-    <div className="relative h-full min-h-[560px]">
+    <div className="absolute inset-0">
       <div className="absolute inset-x-4 top-4 z-[500] flex flex-wrap gap-3">
         <Badge className="bg-white/80 text-slate-700">OpenStreetMap live layer</Badge>
         <Badge className="bg-white/70 text-slate-700">
@@ -169,102 +303,19 @@ export function LiveMap({ reports, focusedReportId, onFocusReport }: LiveMapProp
         </Badge>
       </div>
 
-      <MapContainer
-        center={defaultCenter}
-        zoom={12}
-        scrollWheelZoom
-        className="z-10 min-h-[560px]"
-        zoomControl={false}
-        whenReady={() => setMapReady(true)}
-      >
-        {mapReady ? (
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+      <div className="absolute right-4 top-4 z-[500] flex flex-col items-end gap-2">
+        <Button variant="secondary" size="sm" onClick={handleLocate} disabled={locating}>
+          <LocateFixed className="mr-2 h-4 w-4" />
+          {locating ? "Locating..." : "My location"}
+        </Button>
+        {locationError ? (
+          <div className="max-w-xs rounded-2xl border border-softCoral/25 bg-white/90 px-3 py-2 text-right text-xs text-softCoral shadow-glass backdrop-blur-xl">
+            {locationError}
+          </div>
         ) : null}
+      </div>
 
-        <MapViewport center={defaultCenter} zoom={12} />
-        <FocusedReportSync report={focusedReport} />
-        <UserLocationControl onLocationFound={setUserLocation} />
-
-        {userLocation ? (
-          <Marker
-            position={[userLocation.lat, userLocation.lng]}
-            icon={L.divIcon({
-              className: "vlaad-div-icon",
-              html: '<div class="vlaad-map-marker vlaad-map-marker--trusted">YOU</div>',
-              iconSize: [42, 52],
-              iconAnchor: [21, 50]
-            })}
-          >
-            <Popup>You are here.</Popup>
-          </Marker>
-        ) : null}
-
-        {safeReports.map((report) => (
-          <Marker
-            key={report.id}
-            position={[report.location.lat, report.location.lng]}
-            icon={createMarkerIcon(report)}
-            eventHandlers={{
-              click: () => onFocusReport(report.id)
-            }}
-          >
-            <Popup>
-              <div className="min-w-56">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <Badge
-                    className={
-                      report.intent === "request"
-                        ? "h-14 rounded-[16px] bg-softCoral/15 px-4 text-softCoral"
-                        : "h-14 rounded-[16px] bg-pixelSky/35 px-4 text-slate-700"
-                    }
-                  >
-                    {report.intent === "request"
-                      ? "Need blood"
-                      : report.intent === "inventory_offer"
-                        ? "Blood bags available"
-                        : "Donor / volunteer available"}
-                  </Badge>
-                  <span
-                    className={
-                      report.intent === "request"
-                        ? "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-softCoral/25 bg-softCoral px-4 font-display text-xl text-white shadow-[0_10px_22px_rgba(251,113,133,0.22)]"
-                        : "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-retroYellow/40 bg-retroYellow px-4 font-display text-xl text-slate-900 shadow-[0_10px_22px_rgba(255,209,102,0.24)]"
-                    }
-                  >
-                    {report.bloodType}
-                  </span>
-                </div>
-                <p className="font-semibold text-slate-900">{report.title}</p>
-                <p className="mt-2 text-sm text-slate-500">{report.address}</p>
-                {report.nickname || report.contactNumber ? (
-                  <div className="mt-3 space-y-1 text-sm text-slate-600">
-                    {report.nickname ? <p><span className="font-medium text-slate-900">Nickname:</span> {report.nickname}</p> : null}
-                    {report.contactNumber ? <p><span className="font-medium text-slate-900">Contact:</span> {report.contactNumber}</p> : null}
-                  </div>
-                ) : null}
-                <div className="mt-4 flex gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => onFocusReport(report.id)}>
-                    <Crosshair className="mr-2 h-4 w-4" />
-                    Focus
-                  </Button>
-                  <a
-                    className="inline-flex h-9 items-center justify-center rounded-xl border border-slate-900 bg-retroYellow px-3 text-sm font-semibold text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
-                    href={`https://www.openstreetmap.org/?mlat=${report.location.lat}&mlon=${report.location.lng}#map=15/${report.location.lat}/${report.location.lng}`}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <Navigation className="mr-2 h-4 w-4" />
-                    Open
-                  </a>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+      <div ref={mapContainerRef} className="absolute inset-0 z-10" />
     </div>
   );
 }

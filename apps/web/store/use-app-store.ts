@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { BLOOD_TYPES } from "@vlaad/shared";
 
 type FilterState = {
   selectedBloodTypes: string[];
@@ -10,7 +11,7 @@ type FilterState = {
 };
 
 export const useAppStore = create<FilterState>((set) => ({
-  selectedBloodTypes: ["O+", "A+", "B+", "AB+"],
+  selectedBloodTypes: [...BLOOD_TYPES],
   radiusKm: 15,
   urgentOnly: false,
   toggleBloodType: (value) =>

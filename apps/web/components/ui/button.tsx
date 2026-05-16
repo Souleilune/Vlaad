@@ -14,7 +14,7 @@ const buttonVariants = cva(
         ghost:
           "border-transparent bg-transparent text-slate-700 hover:bg-white/60",
         pixel:
-          "border-slate-900 bg-retroYellow text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+          "border-softCoral/80 bg-[#fff1ec] text-slate-900 shadow-sm hover:bg-[#ffe7e1]"
       },
       size: {
         default: "h-11 px-5",

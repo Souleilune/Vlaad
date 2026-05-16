@@ -123,7 +123,7 @@ export function ReportDetailsModal({ report, open, onClose }: ReportDetailsModal
 
         <div className="mt-6 flex flex-wrap gap-3">
           <a
-            className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-900 bg-retroYellow px-5 text-sm font-semibold text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+            className="inline-flex h-11 items-center justify-center rounded-2xl border border-softCoral/80 bg-[#fff1ec] px-5 text-sm font-semibold text-slate-900 shadow-[4px_4px_0px_0px_rgba(251,113,133,0.42)] transition hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-[#ffe7e1] hover:shadow-none"
             href={`https://www.openstreetmap.org/?mlat=${report.location.lat}&mlon=${report.location.lng}#map=15/${report.location.lat}/${report.location.lng}`}
             rel="noreferrer"
             target="_blank"

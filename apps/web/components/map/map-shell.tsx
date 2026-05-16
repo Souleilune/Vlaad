@@ -33,6 +33,7 @@ type MapShellProps = {
 };
 
 type ReportVisibilityFilter = "all" | "request" | "availability";
+type ControlTab = "summary" | "blood" | "actions";
 const PUBLIC_MAP_TUTORIAL_KEY = "vlaad-public-map-tutorial-seen";
 
 export function MapShell({ layout = "split" }: MapShellProps) {
@@ -40,8 +41,10 @@ export function MapShell({ layout = "split" }: MapShellProps) {
   const { selectedBloodTypes, toggleBloodType, urgentOnly, setUrgentOnly } = useAppStore();
   const [focusedReportId, setFocusedReportId] = useState<string | undefined>(undefined);
   const [openReportId, setOpenReportId] = useState<string | undefined>(undefined);
+  const [routeReportId, setRouteReportId] = useState<string | undefined>(undefined);
   const [controlsExpanded, setControlsExpanded] = useState(false);
   const [reportVisibility, setReportVisibility] = useState<ReportVisibilityFilter>("all");
+  const [activeControlTab, setActiveControlTab] = useState<ControlTab>("summary");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const isStacked = layout === "stacked";
 
@@ -90,17 +93,11 @@ export function MapShell({ layout = "split" }: MapShellProps) {
 
   const focusedReport = filtered.find((report) => report.id === focusedReportId) ?? filtered[0];
   const openReport = filtered.find((report) => report.id === openReportId);
+  const routeReport = filtered.find((report) => report.id === routeReportId);
 
-  const openDirections = () => {
-    if (!focusedReport) {
-      return;
-    }
-
-    window.open(
-      `https://www.openstreetmap.org/?mlat=${focusedReport.location.lat}&mlon=${focusedReport.location.lng}#map=15/${focusedReport.location.lat}/${focusedReport.location.lng}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
+  const handleRequestDirections = (reportId: string) => {
+    setFocusedReportId(reportId);
+    setRouteReportId(reportId);
   };
 
   const closeTutorial = () => {
@@ -113,6 +110,7 @@ export function MapShell({ layout = "split" }: MapShellProps) {
 
   const openTutorial = () => setTutorialOpen(true);
   const mapControlButtonClass = "border border-slate-200/90";
+  const controlTabButtonClass = "h-9 rounded-full border border-slate-200/90 px-3 text-xs font-semibold uppercase tracking-[0.16em]";
 
   return (
     <>
@@ -120,6 +118,10 @@ export function MapShell({ layout = "split" }: MapShellProps) {
         report={openReport}
         open={Boolean(openReport)}
         onClose={() => setOpenReportId(undefined)}
+        onRequestDirections={(reportId) => {
+          handleRequestDirections(reportId);
+          setOpenReportId(undefined);
+        }}
       />
       <div className={`grid gap-6 ${isStacked ? "" : "xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.55fr)]"}`}>
         <Card className="overflow-hidden p-0">
@@ -134,22 +136,32 @@ export function MapShell({ layout = "split" }: MapShellProps) {
               </div>
             ) : null}
             <div className="absolute left-4 top-16 z-[600] max-w-[calc(100%-2rem)] sm:left-5 sm:top-20">
-              <div className="rounded-[24px] border border-white/50 bg-white/82 p-3 shadow-glass backdrop-blur-xl">
+              <div
+                className={`border border-white/50 bg-white/82 shadow-glass backdrop-blur-xl transition-all ${
+                  controlsExpanded ? "w-[min(24rem,calc(100vw-2rem))] rounded-[24px] p-3" : "rounded-full px-3 py-2"
+                }`}
+              >
                 <button
                   type="button"
-                  className="flex items-center gap-3 text-left"
+                  className={`flex items-center text-left ${controlsExpanded ? "gap-3" : "gap-2"}`}
                   onClick={() => setControlsExpanded((current) => !current)}
                   aria-expanded={controlsExpanded}
                   aria-label={controlsExpanded ? "Collapse map controls" : "Expand map controls"}
                 >
-                  <span className="rounded-full bg-softCoral/10 p-2 text-softCoral">
+                  <span className={`rounded-full bg-softCoral/10 text-softCoral ${controlsExpanded ? "p-2" : "p-1.5"}`}>
                     <Radar className="h-4 w-4" />
                   </span>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Map Controls</p>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {filtered.length} live reports
-                    </p>
+                    {controlsExpanded ? (
+                      <>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Map Controls</p>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {filtered.length} live reports
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm font-semibold text-slate-900">{filtered.length} reports</p>
+                    )}
                   </div>
                   <span className={`ml-1 text-slate-500 transition-transform ${controlsExpanded ? "rotate-180" : ""}`}>
                     <ChevronDown className="h-4 w-4" />
@@ -158,7 +170,34 @@ export function MapShell({ layout = "split" }: MapShellProps) {
 
                 {controlsExpanded ? (
                   <div className="mt-4 border-t border-white/50 pt-4">
-                    <div className="grid gap-2 text-sm text-slate-500 sm:grid-cols-3">
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant={activeControlTab === "summary" ? "default" : "secondary"}
+                        size="sm"
+                        className={controlTabButtonClass}
+                        onClick={() => setActiveControlTab("summary")}
+                      >
+                        Filters
+                      </Button>
+                      <Button
+                        variant={activeControlTab === "blood" ? "default" : "secondary"}
+                        size="sm"
+                        className={controlTabButtonClass}
+                        onClick={() => setActiveControlTab("blood")}
+                      >
+                        Blood Types
+                      </Button>
+                      <Button
+                        variant={activeControlTab === "actions" ? "default" : "secondary"}
+                        size="sm"
+                        className={controlTabButtonClass}
+                        onClick={() => setActiveControlTab("actions")}
+                      >
+                        Actions
+                      </Button>
+                    </div>
+
+                    <div className="mt-4 hidden gap-2 text-sm text-slate-500 md:grid md:grid-cols-2">
                       <div className="rounded-2xl bg-white/70 px-4 py-3">
                         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Visible reports</p>
                         <p className="mt-1 text-2xl font-semibold text-slate-900">{filtered.length}</p>
@@ -169,96 +208,107 @@ export function MapShell({ layout = "split" }: MapShellProps) {
                           {filtered.filter((report) => report.isEmergency).length}
                         </p>
                       </div>
-                      <div className="rounded-2xl bg-white/70 px-4 py-3">
+                      <div className="rounded-2xl bg-white/70 px-4 py-3 md:col-span-2">
                         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Blood types</p>
                         <p className="mt-1 text-2xl font-semibold text-slate-900">{selectedBloodTypes.length}</p>
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Button
-                        variant={reportVisibility === "all" ? "default" : "secondary"}
-                        size="sm"
-                        className={mapControlButtonClass}
-                        onClick={() => setReportVisibility("all")}
-                      >
-                        All reports
-                      </Button>
-                      <Button
-                        variant={reportVisibility === "request" ? "default" : "secondary"}
-                        size="sm"
-                        className={mapControlButtonClass}
-                        onClick={() => setReportVisibility("request")}
-                      >
-                        Requests
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className={
-                          reportVisibility === "availability"
-                            ? "border border-sky-700/70 bg-sky-700 text-white hover:bg-sky-800"
-                            : mapControlButtonClass
-                        }
-                        onClick={() => setReportVisibility("availability")}
-                      >
-                        Availability
-                      </Button>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className={mapControlButtonClass}
-                        onClick={() => {
-                          BLOOD_TYPES.forEach((type) => {
-                            if (selectedBloodTypes.includes(type)) {
-                              toggleBloodType(type);
+                    {activeControlTab === "summary" ? (
+                      <div className="mt-4 space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant={reportVisibility === "all" ? "default" : "secondary"}
+                            size="sm"
+                            className={mapControlButtonClass}
+                            onClick={() => setReportVisibility("all")}
+                          >
+                            All reports
+                          </Button>
+                          <Button
+                            variant={reportVisibility === "request" ? "default" : "secondary"}
+                            size="sm"
+                            className={mapControlButtonClass}
+                            onClick={() => setReportVisibility("request")}
+                          >
+                            Requests
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className={
+                              reportVisibility === "availability"
+                                ? "border border-sky-700/70 bg-sky-700 text-white hover:bg-sky-800"
+                                : mapControlButtonClass
                             }
-                          });
-                        }}
-                      >
-                        Clear
-                      </Button>
-                      {BLOOD_TYPES.map((type) => (
+                            onClick={() => setReportVisibility("availability")}
+                          >
+                            Availability
+                          </Button>
+                        </div>
+
                         <Button
-                          key={type}
-                          variant={selectedBloodTypes.includes(type) ? "default" : "secondary"}
+                          variant={urgentOnly ? "default" : "secondary"}
                           size="sm"
                           className={mapControlButtonClass}
-                          onClick={() => toggleBloodType(type)}
+                          onClick={() => setUrgentOnly(!urgentOnly)}
                         >
-                          {type}
+                          <Siren className="mr-2 h-4 w-4" />
+                          Emergency Only
                         </Button>
-                      ))}
-                    </div>
+                      </div>
+                    ) : null}
 
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button variant="pixel" size="sm" className={mapControlButtonClass}>
-                        <Radar className="mr-2 h-4 w-4" />
-                        Hotspots
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className={mapControlButtonClass}
-                        onClick={openDirections}
-                        disabled={!focusedReport}
-                      >
-                        <MapPinned className="mr-2 h-4 w-4" />
-                        Directions
-                      </Button>
-                      <Button
-                        variant={urgentOnly ? "default" : "secondary"}
-                        size="sm"
-                        className={mapControlButtonClass}
-                        onClick={() => setUrgentOnly(!urgentOnly)}
-                      >
-                        <Siren className="mr-2 h-4 w-4" />
-                        Emergency Only
-                      </Button>
-                    </div>
+                    {activeControlTab === "blood" ? (
+                      <div className="mt-4 space-y-3">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className={mapControlButtonClass}
+                          onClick={() => {
+                            BLOOD_TYPES.forEach((type) => {
+                              if (selectedBloodTypes.includes(type)) {
+                                toggleBloodType(type);
+                              }
+                            });
+                          }}
+                        >
+                          Clear all
+                        </Button>
+                        <div className="grid grid-cols-4 gap-2">
+                          {BLOOD_TYPES.map((type) => (
+                            <Button
+                              key={type}
+                              variant={selectedBloodTypes.includes(type) ? "default" : "secondary"}
+                              size="sm"
+                              className="border border-slate-200/90 px-0"
+                              onClick={() => toggleBloodType(type)}
+                            >
+                              {type}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {activeControlTab === "actions" ? (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className={mapControlButtonClass}
+                          onClick={() => {
+                            if (focusedReport) {
+                              handleRequestDirections(focusedReport.id);
+                            }
+                          }}
+                          disabled={!focusedReport}
+                        >
+                          <MapPinned className="mr-2 h-4 w-4" />
+                          Directions
+                        </Button>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -313,7 +363,14 @@ export function MapShell({ layout = "split" }: MapShellProps) {
               </div>
             ) : null}
 
-            <LiveMap reports={filtered} focusedReportId={focusedReport?.id} onFocusReport={setFocusedReportId} />
+            <LiveMap
+              reports={filtered}
+              focusedReportId={focusedReport?.id}
+              routedReportId={routeReport?.id}
+              onFocusReport={setFocusedReportId}
+              onRequestDirections={handleRequestDirections}
+              onClearDirections={() => setRouteReportId(undefined)}
+            />
           </div>
         </Card>
 

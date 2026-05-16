@@ -10,6 +10,7 @@ type ReportDetailsModalProps = {
   report?: BloodReport;
   open: boolean;
   onClose: () => void;
+  onRequestDirections: (reportId: string) => void;
 };
 
 function getIntentLabel(report: BloodReport) {
@@ -24,7 +25,7 @@ function getIntentLabel(report: BloodReport) {
   return "Donor / volunteer available";
 }
 
-export function ReportDetailsModal({ report, open, onClose }: ReportDetailsModalProps) {
+export function ReportDetailsModal({ report, open, onClose, onRequestDirections }: ReportDetailsModalProps) {
   if (!open || !report) {
     return null;
   }
@@ -122,14 +123,13 @@ export function ReportDetailsModal({ report, open, onClose }: ReportDetailsModal
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <a
-            className="inline-flex h-11 items-center justify-center rounded-2xl border border-softCoral/80 bg-[#fff1ec] px-5 text-sm font-semibold text-slate-900 shadow-[4px_4px_0px_0px_rgba(251,113,133,0.42)] transition hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-[#ffe7e1] hover:shadow-none"
-            href={`https://www.openstreetmap.org/?mlat=${report.location.lat}&mlon=${report.location.lng}#map=15/${report.location.lat}/${report.location.lng}`}
-            rel="noreferrer"
-            target="_blank"
+          <button
+            type="button"
+            className="inline-flex h-11 items-center justify-center rounded-2xl border border-softCoral/80 bg-[#fff1ec] px-5 text-sm font-semibold text-slate-900 transition hover:bg-[#ffe7e1]"
+            onClick={() => onRequestDirections(report.id)}
           >
-            Open in map
-          </a>
+            Get direction
+          </button>
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>

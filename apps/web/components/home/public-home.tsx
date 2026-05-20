@@ -6,9 +6,7 @@ import { ClipboardPlus, LogIn, UserPlus } from "lucide-react";
 import { PublicAnnouncementStrip, PublicAnnouncements } from "@/components/home/public-announcements";
 import { ReportModal } from "@/components/reports/report-modal";
 import { MapShell } from "@/components/map/map-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
 export function PublicHome() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -108,32 +106,8 @@ export function PublicHome() {
 
       <section className="flex flex-col gap-6 pt-20" aria-label="Public blood request and availability map">
         <PublicAnnouncementStrip />
-        <MapShell layout="stacked" />
+        <MapShell layout="stacked" onCreateReport={() => setReportModalOpen(true)} />
         <PublicAnnouncements />
-
-        <Card className="mx-auto w-full max-w-6xl overflow-hidden p-0">
-          <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="bg-gradient-to-br from-softCoral/14 via-white/70 to-cream/60 p-6 sm:p-8">
-              <Badge className="bg-pixelSky/35 text-slate-700">Create a Report</Badge>
-              <h2 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
-                Add a new request, donor offer, or blood bag availability update.
-              </h2>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
-                Reporting comes after discovery here. Once someone sees what is needed on the map and in the feed, they can contribute the next update directly into the public system.
-              </p>
-            </div>
-
-            <div className="flex flex-col justify-center gap-4 border-t border-white/45 p-6 sm:p-8 lg:border-l lg:border-t-0">
-              <Button variant="pixel" size="lg" className="w-full sm:w-auto" onClick={() => setReportModalOpen(true)}>
-                <ClipboardPlus className="mr-2 h-4 w-4" />
-                Create a Post
-              </Button>
-              <p className="text-sm leading-6 text-slate-500">
-                Coordinators can still register or log in from the expanded navigation, but the homepage now keeps the main action sequence focused on map, reports, then posting.
-              </p>
-            </div>
-          </div>
-        </Card>
       </section>
     </main>
   );

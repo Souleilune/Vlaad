@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, CircleHelp, MapPinned, Radar, Siren } from "lucide-react";
+import { ChevronDown, CircleHelp, ClipboardPlus, MapPinned, Radar, Siren } from "lucide-react";
 import { BLOOD_TYPES, type ReportIntent } from "@vlaad/shared";
 import { useRealtimeFeed } from "@/hooks/use-realtime-feed";
 import { useAppStore } from "@/store/use-app-store";
@@ -19,9 +19,11 @@ const LiveMap = dynamic(
       <div className="relative min-h-[560px] bg-[length:26px_26px] bg-grid-fade">
         <div className="absolute inset-0 bg-gradient-to-br from-pixelSky/30 via-cream/10 to-mint/30" />
         <div className="relative flex h-full min-h-[560px] items-center justify-center">
-          <div className="rounded-[28px] border border-white/50 bg-white/80 px-6 py-4 text-sm text-slate-600 shadow-glass backdrop-blur-xl">
-            Loading OpenStreetMap layer...
-          </div>
+          <div
+            className="h-12 w-12 rounded-full border-4 border-white/60 border-t-softCoral bg-white/40 shadow-glass backdrop-blur-xl"
+            aria-label="Loading map"
+            role="status"
+          />
         </div>
       </div>
     )
@@ -30,13 +32,14 @@ const LiveMap = dynamic(
 
 type MapShellProps = {
   layout?: "split" | "stacked";
+  onCreateReport?: () => void;
 };
 
 type ReportVisibilityFilter = "all" | "request" | "availability";
 type ControlTab = "summary" | "blood" | "actions";
 const PUBLIC_MAP_TUTORIAL_KEY = "vlaad-public-map-tutorial-seen";
 
-export function MapShell({ layout = "split" }: MapShellProps) {
+export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
   const { reports, loading } = useRealtimeFeed();
   const { selectedBloodTypes, toggleBloodType, urgentOnly, setUrgentOnly } = useAppStore();
   const [focusedReportId, setFocusedReportId] = useState<string | undefined>(undefined);
@@ -109,8 +112,8 @@ export function MapShell({ layout = "split" }: MapShellProps) {
   };
 
   const openTutorial = () => setTutorialOpen(true);
-  const mapControlButtonClass = "border border-slate-200/90";
-  const controlTabButtonClass = "h-9 rounded-full border border-slate-200/90 px-3 text-xs font-semibold uppercase tracking-[0.16em]";
+  const mapControlButtonClass = "rounded-2xl border border-slate-200/90";
+  const controlTabButtonClass = "h-9 rounded-2xl border border-slate-200/90 px-3 text-xs font-semibold uppercase tracking-[0.16em]";
 
   return (
     <>
@@ -129,29 +132,30 @@ export function MapShell({ layout = "split" }: MapShellProps) {
             <div className="absolute inset-0 bg-gradient-to-br from-pixelSky/30 via-cream/10 to-mint/30" />
             {isStacked ? (
               <div className="absolute right-4 top-16 z-[600] sm:right-5 sm:top-20">
-                <Button variant="secondary" size="sm" onClick={openTutorial}>
+                <Button variant="secondary" size="sm" className="rounded-2xl" onClick={openTutorial}>
                   <CircleHelp className="mr-2 h-4 w-4" />
                   Guide
                 </Button>
               </div>
             ) : null}
-            <div className="absolute left-4 top-16 z-[600] max-w-[calc(100%-2rem)] sm:left-5 sm:top-20">
+            <div className="absolute bottom-[3.9rem] left-4 z-[600] w-[19rem] max-w-[calc(100%-2rem)] sm:bottom-[3.9rem] sm:left-5">
               <div
                 className={`border border-white/50 bg-white/82 shadow-glass backdrop-blur-xl transition-all ${
-                  controlsExpanded ? "w-[min(24rem,calc(100vw-2rem))] rounded-[24px] p-3" : "rounded-full px-3 py-2"
+                  controlsExpanded ? "w-full rounded-2xl p-3" : "w-full rounded-2xl px-4 py-3"
                 }`}
               >
                 <button
                   type="button"
-                  className={`flex items-center text-left ${controlsExpanded ? "gap-3" : "gap-2"}`}
+                  className={`flex w-full items-center justify-between text-left ${controlsExpanded ? "gap-3" : "gap-2"}`}
                   onClick={() => setControlsExpanded((current) => !current)}
                   aria-expanded={controlsExpanded}
                   aria-label={controlsExpanded ? "Collapse map controls" : "Expand map controls"}
                 >
-                  <span className={`rounded-full bg-softCoral/10 text-softCoral ${controlsExpanded ? "p-2" : "p-1.5"}`}>
-                    <Radar className="h-4 w-4" />
-                  </span>
-                  <div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-2xl bg-softCoral/10 p-2 text-softCoral">
+                      <Radar className="h-4 w-4" />
+                    </span>
+                    <div>
                     {controlsExpanded ? (
                       <>
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Map Controls</p>
@@ -159,9 +163,10 @@ export function MapShell({ layout = "split" }: MapShellProps) {
                           {filtered.length} live reports
                         </p>
                       </>
-                    ) : (
+                      ) : (
                       <p className="text-sm font-semibold text-slate-900">{filtered.length} reports</p>
                     )}
+                    </div>
                   </div>
                   <span className={`ml-1 text-slate-500 transition-transform ${controlsExpanded ? "rotate-180" : ""}`}>
                     <ChevronDown className="h-4 w-4" />
@@ -316,11 +321,14 @@ export function MapShell({ layout = "split" }: MapShellProps) {
 
             {tutorialOpen && isStacked ? (
               <div className="absolute inset-0 z-[650] flex items-center justify-center bg-slate-900/28 p-4 sm:p-6">
-                <div className="w-full max-w-2xl rounded-[32px] border border-white/80 bg-[#fffdf8] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)] sm:p-8">
+                <div className="w-full max-w-2xl rounded-2xl border border-white/80 bg-[#fffdf8] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)] sm:p-8">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">How Vlaad Works</p>
-                      <h3 className="mt-2 text-3xl font-semibold text-slate-900">Start with the map, then filter, then act.</h3>
+                      <h3 className="mt-2 text-3xl font-semibold text-slate-900">Start on the map. Open the reports. Post only after you confirm the need.</h3>
+                      <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">
+                        The homepage is built for quick verification. Scan the map first, open a report for full details, then use the report button inside the map when you have a real update to share.
+                      </p>
                     </div>
                     <Button variant="ghost" size="sm" onClick={closeTutorial}>
                       Skip
@@ -328,32 +336,32 @@ export function MapShell({ layout = "split" }: MapShellProps) {
                   </div>
 
                   <div className="mt-6 grid gap-4 md:grid-cols-3">
-                    <div className="rounded-[24px] bg-softCoral/10 p-4">
+                    <div className="rounded-2xl bg-softCoral/10 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-softCoral">Step 1</p>
-                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Explore reports</h4>
+                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Scan the map</h4>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Scan the markers first. Every marker represents a live request or an availability post.
+                        Start with the markers. They show where requests, donor offers, and blood bag availability are happening right now.
                       </p>
                     </div>
-                    <div className="rounded-[24px] bg-pixelSky/18 p-4">
+                    <div className="rounded-2xl bg-pixelSky/18 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Step 2</p>
-                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Narrow the feed</h4>
+                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Open full details</h4>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Open map controls to switch between requests, availability, blood types, and emergency-only posts.
+                        Tap a marker or report card to inspect the location, blood type, urgency, contact details, and expiration time before acting.
                       </p>
                     </div>
-                    <div className="rounded-[24px] bg-retroYellow/30 p-4">
+                    <div className="rounded-2xl bg-retroYellow/30 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">Step 3</p>
-                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Open details or post</h4>
+                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Create a report</h4>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Tap a marker or report card for details, then create a new report when you want to contribute.
+                        Use the Create a report button inside the map when you want to add the next verified request or availability update.
                       </p>
                     </div>
                   </div>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-slate-500">
-                      You can reopen this anytime with the <span className="font-semibold text-slate-700">Guide</span> button on the map.
+                      Reopen this anytime with the <span className="font-semibold text-slate-700">Guide</span> button in the top-right corner of the map.
                     </p>
                     <Button variant="pixel" onClick={closeTutorial}>
                       Got it
@@ -371,23 +379,43 @@ export function MapShell({ layout = "split" }: MapShellProps) {
               onRequestDirections={handleRequestDirections}
               onClearDirections={() => setRouteReportId(undefined)}
             />
+
+            {isStacked && onCreateReport ? (
+              <div className="absolute bottom-4 left-4 z-[600] w-[11rem] max-w-[calc(100%-2rem)] sm:bottom-5 sm:left-5">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="w-full rounded-2xl shadow-[0_14px_30px_rgba(244,63,94,0.32)]"
+                  onClick={onCreateReport}
+                >
+                  <ClipboardPlus className="mr-2 h-4 w-4" />
+                  Create a report
+                </Button>
+              </div>
+            ) : null}
           </div>
         </Card>
 
         <div className="space-y-4">
-          <Card className={isStacked ? "p-6" : "bg-slate-900/95 p-5 text-white shadow-[0_20px_50px_rgba(15,23,42,0.2)]"}>
-            <p className={`text-xs font-semibold uppercase tracking-[0.24em] ${isStacked ? "text-slate-400" : "text-white/60"}`}>
-              Community Feed
-            </p>
-            <h3 className={`mt-2 text-2xl font-semibold ${isStacked ? "text-slate-900" : "text-white"}`}>
-              Open a report and inspect what is happening on the ground.
-            </h3>
-            <p className={`mt-2 text-sm leading-6 ${isStacked ? "text-slate-600" : "text-white/70"}`}>
-              {isStacked
-                ? "After the map catches attention, this section gives the full context for each request, donor offer, and blood bag update."
-                : "This feed stays alongside the map so responders can compare geography and report details without leaving the homepage."}
-            </p>
-          </Card>
+          {isStacked ? (
+            <div className="px-1 pt-1">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                Community reports
+              </p>
+            </div>
+          ) : (
+            <Card className="bg-slate-900/95 p-5 text-white shadow-[0_20px_50px_rgba(15,23,42,0.2)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">
+                Community reports
+              </p>
+              <h3 className="mt-2 text-2xl font-semibold text-white">
+                Open a report and inspect what is happening on the ground.
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-white/70">
+                This feed stays alongside the map so responders can compare geography and report details without leaving the homepage.
+              </p>
+            </Card>
+          )}
 
           {loading ? (
             <Card>
@@ -438,9 +466,7 @@ export function MapShell({ layout = "split" }: MapShellProps) {
                           : "Donor available"}
                     </Badge>
                   </div>
-                  <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-                    Tap for full details
-                  </p>
+                  <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Full details</p>
                   <p className="mt-3 text-sm text-slate-600">{report.description}</p>
                   <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
                     <span>{report.availableBags} bags available</span>

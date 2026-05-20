@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import L, { type DivIcon } from "leaflet";
-import { Clock3, LocateFixed, MapPinned, Waves, X } from "lucide-react";
+import { Clock3, LocateFixed, MapPinned, X } from "lucide-react";
 import type { BloodReport, GeoPoint } from "@vlaad/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -483,16 +483,8 @@ export function LiveMap({
 
   return (
     <div className="absolute inset-0">
-      <div className="absolute inset-x-4 top-4 z-[500] flex flex-wrap gap-3">
-        <Badge className="bg-white/80 text-slate-700">OpenStreetMap live layer</Badge>
-        <Badge className="bg-white/70 text-slate-700">
-          <Waves className="mr-1 h-3 w-3" />
-          {safeReports.length} active markers
-        </Badge>
-      </div>
-
       <div className="absolute right-4 top-4 z-[500] flex flex-col items-end gap-2">
-        <Button variant="secondary" size="sm" onClick={handleLocate} disabled={locating}>
+        <Button variant="secondary" size="sm" className="rounded-2xl" onClick={handleLocate} disabled={locating}>
           <LocateFixed className="mr-2 h-4 w-4" />
           {locating ? "Locating..." : "My location"}
         </Button>
@@ -513,14 +505,14 @@ export function LiveMap({
 
       <div className="absolute bottom-4 right-4 z-[500] flex flex-col items-end gap-2">
         {routedReport ? (
-          <div className="max-w-sm rounded-[24px] border border-white/60 bg-white/92 p-3 shadow-glass backdrop-blur-xl">
+          <div className="max-w-sm rounded-2xl border border-white/60 bg-white/92 p-3 shadow-glass backdrop-blur-xl">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Directions</p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">{routedReport.title}</p>
                 <p className="mt-1 text-xs text-slate-500">{routedReport.address}</p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClearDirections} aria-label="Clear directions">
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-2xl" onClick={onClearDirections} aria-label="Clear directions">
                 <X className="h-4 w-4" />
               </Button>
             </div>

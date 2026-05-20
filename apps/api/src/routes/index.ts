@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { adminRouter } from "./admin.routes";
 import { analyticsRouter } from "./analytics.routes";
+import { announcementsRouter } from "./announcements.routes";
 import { authRouter } from "./auth.routes";
 import { emergencyRouter } from "./emergency.routes";
 import { moderationRouter } from "./moderation.routes";
@@ -15,6 +16,7 @@ apiRouter.get("/health", (_req, res) => {
 });
 
 apiRouter.use("/auth", authRouter);
+apiRouter.use("/announcements", announcementsRouter);
 apiRouter.use("/reports", reportsRouter);
 apiRouter.use("/emergencies", emergencyRouter);
 apiRouter.use("/notifications", notificationsRouter);

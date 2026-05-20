@@ -125,3 +125,42 @@ body {
   background: linear-gradient(135deg, #ff6b6b, #ffd6d6);
   animation: pulseSoft 1.8s ease-in-out infinite;
 }
+
+.vlaad-announcement-ticker {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.vlaad-announcement-track {
+  display: inline-flex;
+  min-width: max-content;
+  align-items: center;
+  gap: 1.5rem;
+  animation: announcementTicker 24s linear infinite;
+}
+
+.vlaad-announcement-text {
+  display: inline-flex;
+  align-items: center;
+  color: #0f172a;
+  font-size: 0.96rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.vlaad-announcement-text::after {
+  content: "•";
+  margin-left: 1.5rem;
+  color: rgba(15, 23, 42, 0.35);
+}
+
+@keyframes announcementTicker {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}

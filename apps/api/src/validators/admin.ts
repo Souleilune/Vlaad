@@ -5,6 +5,10 @@ export const announcementSchema = z.object({
   body: z.string().min(8).max(1000)
 });
 
+export const announcementArchiveSchema = z.object({
+  archived: z.boolean()
+});
+
 export const roleUpdateSchema = z.object({
   role: z.enum(["user", "admin"])
 });

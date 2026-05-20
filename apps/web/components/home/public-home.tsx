@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ClipboardPlus, LogIn, UserPlus } from "lucide-react";
+import { PublicAnnouncementStrip, PublicAnnouncements } from "@/components/home/public-announcements";
 import { ReportModal } from "@/components/reports/report-modal";
 import { MapShell } from "@/components/map/map-shell";
 import { Badge } from "@/components/ui/badge";
@@ -106,7 +107,9 @@ export function PublicHome() {
       </header>
 
       <section className="flex flex-col gap-6 pt-20" aria-label="Public blood request and availability map">
+        <PublicAnnouncementStrip />
         <MapShell layout="stacked" />
+        <PublicAnnouncements />
 
         <Card className="mx-auto w-full max-w-6xl overflow-hidden p-0">
           <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">

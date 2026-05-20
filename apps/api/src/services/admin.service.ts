@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { UserRole, VerifiedSource } from "@vlaad/shared";
 import { createTimer, logInfo } from "../lib/logger";
 import { supabaseAdmin } from "../lib/supabase";
@@ -128,6 +129,8 @@ export async function updateUserRole(userId: string, role: Extract<UserRole, "us
 
 export async function queueAnnouncement(title: string, body: string) {
   const client = ensureSupabase();
+  const announcementId = randomUUID();
+  const sentAt = new Date().toISOString();
   const { data: users, error: usersError } = await client.from("users").select("id");
 
   if (usersError) {
@@ -142,10 +145,15 @@ export async function queueAnnouncement(title: string, body: string) {
 
   const payload = recipients.map((user) => ({
     user_id: user.id,
-    category: "system",
+    category: "emergency_broadcast",
     title,
     body,
-    metadata: { announcement: true }
+    metadata: {
+      announcement: true,
+      announcementId,
+      sentAt,
+      label: "Patch Notes"
+    }
   }));
 
   const { error } = await client.from("notifications").insert(payload);

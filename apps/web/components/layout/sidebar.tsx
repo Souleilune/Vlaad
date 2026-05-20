@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Bell, Map, UserRound } from "lucide-react";
+import { Bell, FileText, Map, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { readStoredSession } from "@/lib/auth";
 
@@ -19,7 +19,9 @@ export function Sidebar() {
     setIsAdmin(readStoredSession()?.role === "admin");
   }, []);
 
-  const navItems = isAdmin ? [...items, { href: "/admin", label: "Admin", icon: UserRound }] : items;
+  const navItems = isAdmin
+    ? [...items, { href: "/admin", label: "Admin", icon: UserRound }, { href: "/patch-notes", label: "Patch Notes", icon: FileText }]
+    : items;
 
   return (
     <aside className="hidden shrink-0 lg:block">

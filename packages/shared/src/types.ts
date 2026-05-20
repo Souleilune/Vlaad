@@ -68,6 +68,14 @@ export interface NotificationItem {
   category: "nearby_alert" | "emergency_broadcast" | "reminder" | "system";
 }
 
+export interface PublicAnnouncement {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  label: string;
+}
+
 export interface DonationStat {
   lastDonationDate?: string | null;
   nextEligibleDate?: string | null;

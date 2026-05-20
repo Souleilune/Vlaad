@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createTimer, logInfo } from "../lib/logger";
 import { requireRole } from "../middleware/require-role";
 import { asyncHandler } from "../utils/async-handler";
 import {
@@ -12,7 +13,13 @@ export const moderationRouter = Router();
 moderationRouter.use(requireRole(["admin"]));
 
 moderationRouter.get("/queue", asyncHandler(async (_req, res) => {
+  const timer = createTimer();
   const items = await listModerationQueue();
+  logInfo("Admin endpoint completed.", {
+    endpoint: "/api/v1/moderation/queue",
+    durationMs: timer.elapsedMs(),
+    itemCount: items.length
+  });
   res.json({ items });
 }));
 

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { BloodReport } from "@vlaad/shared";
+import { createTimer, logInfo } from "../lib/logger";
 import { supabaseAdmin } from "../lib/supabase";
 import { ApiError } from "../utils/api-error";
 
@@ -47,14 +48,26 @@ export async function listReports() {
     return [];
   }
 
+  const nowIso = new Date().toISOString();
+  const timer = createTimer();
   const { data, error } = await supabaseAdmin
     .from("blood_reports")
-    .select("*")
+    .select(
+      "id, title, blood_type, organization_name, description, address, latitude, longitude, contact_number, nickname, expires_at, available_bags, verification_status, source_type, is_emergency, created_at"
+    )
+    .in("verification_status", ["pending", "verified"])
+    .gt("expires_at", nowIso)
     .order("created_at", { ascending: false });
 
   if (error) {
     throw new ApiError(500, "Failed to load blood reports", error.message);
   }
+
+  logInfo("Reports feed query completed.", {
+    endpoint: "/api/v1/reports",
+    durationMs: timer.elapsedMs(),
+    itemCount: (data ?? []).length
+  });
 
   return (data ?? []).map((row) => mapRowToReport(row));
 }

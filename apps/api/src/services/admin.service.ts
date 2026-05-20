@@ -1,4 +1,5 @@
 import type { UserRole, VerifiedSource } from "@vlaad/shared";
+import { createTimer, logInfo } from "../lib/logger";
 import { supabaseAdmin } from "../lib/supabase";
 import { ApiError } from "../utils/api-error";
 
@@ -158,72 +159,46 @@ export async function queueAnnouncement(title: string, body: string) {
 
 export async function getAnalyticsOverview() {
   const client = ensureSupabase();
-  const nowIso = new Date().toISOString();
-  const thirtyDaysAgoIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const timer = createTimer();
+  const { data, error } = await client.rpc("get_admin_analytics_overview");
 
-  const [
-    totalReportsResult,
-    activeReportsResult,
-    allActiveReportsResult,
-    activeEmergenciesResult,
-    resolvedEmergenciesResult,
-    recentUsersResult
-  ] = await Promise.all([
-    client.from("blood_reports").select("id", { count: "exact", head: true }),
-    client
-      .from("blood_reports")
-      .select("available_bags")
-      .in("verification_status", ["pending", "verified"])
-      .gt("expires_at", nowIso),
-    client.from("blood_reports").select("verification_status"),
-    client
-      .from("emergency_requests")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["open", "matched"]),
-    client
-      .from("emergency_requests")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "resolved"),
-    client
-      .from("users")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", thirtyDaysAgoIso)
-  ]);
-
-  for (const result of [
-    totalReportsResult,
-    activeReportsResult,
-    allActiveReportsResult,
-    activeEmergenciesResult,
-    resolvedEmergenciesResult,
-    recentUsersResult
-  ]) {
-    if (result.error) {
-      throw new ApiError(500, "Failed to load analytics overview.", result.error.message);
-    }
+  if (error) {
+    throw new ApiError(500, "Failed to load analytics overview.", error.message);
   }
 
-  const totalReports = totalReportsResult.count ?? 0;
-  const activeBloodAvailability = (activeReportsResult.data ?? []).reduce(
-    (sum, row) => sum + Number(row.available_bags ?? 0),
-    0
-  );
-  const activeEmergencies = activeEmergenciesResult.count ?? 0;
-  const resolvedRequests = resolvedEmergenciesResult.count ?? 0;
-  const userGrowth = recentUsersResult.count ?? 0;
-  const moderationBase = (allActiveReportsResult.data ?? []).length;
-  const verifiedCount = (allActiveReportsResult.data ?? []).filter(
-    (row) => row.verification_status === "verified"
-  ).length;
-  const verificationRate = moderationBase ? Number(((verifiedCount / moderationBase) * 100).toFixed(1)) : 0;
+  const row = data?.[0];
+
+  if (!row) {
+    logInfo("Analytics overview query completed.", {
+      endpoint: "/api/v1/analytics/overview",
+      durationMs: timer.elapsedMs(),
+      resultCount: 0
+    });
+
+    return {
+      totalReports: 0,
+      activeBloodAvailability: 0,
+      activeEmergencies: 0,
+      resolvedRequests: 0,
+      userGrowth: 0,
+      verificationRate: 0
+    };
+  }
+
+  logInfo("Analytics overview query completed.", {
+    endpoint: "/api/v1/analytics/overview",
+    durationMs: timer.elapsedMs(),
+    totalReports: Number(row.total_reports ?? 0),
+    activeEmergencies: Number(row.active_emergencies ?? 0)
+  });
 
   return {
-    totalReports,
-    activeBloodAvailability,
-    activeEmergencies,
-    resolvedRequests,
-    userGrowth,
-    verificationRate
+    totalReports: Number(row.total_reports ?? 0),
+    activeBloodAvailability: Number(row.active_blood_availability ?? 0),
+    activeEmergencies: Number(row.active_emergencies ?? 0),
+    resolvedRequests: Number(row.resolved_requests ?? 0),
+    userGrowth: Number(row.user_growth ?? 0),
+    verificationRate: Number(row.verification_rate ?? 0)
   };
 }
 
@@ -282,21 +257,33 @@ export async function getAnalyticsHeatmap() {
 
 export async function listModerationQueue() {
   const client = ensureSupabase();
-  const [reportsResult, flagsResult] = await Promise.all([
-    client
-      .from("blood_reports")
-      .select(
-        "id, title, blood_type, source_type, verification_status, address, available_bags, created_at, expires_at, organization_name, nickname, is_emergency"
-      )
-      .eq("verification_status", "pending")
-      .order("created_at", { ascending: true })
-      .limit(25),
-    client.from("report_flags").select("report_id")
-  ]);
+  const timer = createTimer();
+  const reportsResult = await client
+    .from("blood_reports")
+    .select(
+      "id, title, blood_type, source_type, verification_status, address, available_bags, created_at, expires_at, organization_name, nickname, is_emergency"
+    )
+    .eq("verification_status", "pending")
+    .order("created_at", { ascending: true })
+    .limit(25);
 
   if (reportsResult.error) {
     throw new ApiError(500, "Failed to load moderation queue.", reportsResult.error.message);
   }
+
+  const reportIds = ((reportsResult.data ?? []) as ReportRow[]).map((row) => row.id);
+
+  if (!reportIds.length) {
+    logInfo("Moderation queue query completed.", {
+      endpoint: "/api/v1/moderation/queue",
+      durationMs: timer.elapsedMs(),
+      queueSize: 0
+    });
+
+    return [];
+  }
+
+  const flagsResult = await client.from("report_flags").select("report_id").in("report_id", reportIds);
 
   if (flagsResult.error) {
     throw new ApiError(500, "Failed to load report flags.", flagsResult.error.message);
@@ -307,6 +294,13 @@ export async function listModerationQueue() {
   for (const flag of (flagsResult.data ?? []) as ReportFlagRow[]) {
     flagsByReportId.set(flag.report_id, (flagsByReportId.get(flag.report_id) ?? 0) + 1);
   }
+
+  logInfo("Moderation queue query completed.", {
+    endpoint: "/api/v1/moderation/queue",
+    durationMs: timer.elapsedMs(),
+    queueSize: reportIds.length,
+    matchedFlags: (flagsResult.data ?? []).length
+  });
 
   return ((reportsResult.data ?? []) as ReportRow[]).map((row) => ({
     id: row.id,

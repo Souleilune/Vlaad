@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createTimer, logInfo } from "../lib/logger";
 import { requireAuth } from "../middleware/auth";
 import { anonymousReportLimiter } from "../middleware/rate-limit";
 import { validateBody } from "../middleware/validate";
@@ -9,7 +10,13 @@ import { reportFlagSchema, reportSchema } from "../validators/reports";
 export const reportsRouter = Router();
 
 reportsRouter.get("/", asyncHandler(async (_req, res) => {
+  const timer = createTimer();
   const items = await listReports();
+  logInfo("Public endpoint completed.", {
+    endpoint: "/api/v1/reports",
+    durationMs: timer.elapsedMs(),
+    itemCount: items.length
+  });
   res.json({ items });
 }));
 

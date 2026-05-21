@@ -39,6 +39,15 @@ type ReportVisibilityFilter = "all" | "request" | "availability";
 type ControlTab = "summary" | "blood" | "actions";
 const PUBLIC_MAP_TUTORIAL_KEY = "vlaad-public-map-tutorial-seen";
 
+function formatReportExpiry(value: string) {
+  const date = new Date(value);
+
+  return {
+    time: date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+    date: date.toLocaleDateString([], { month: "short", day: "numeric" })
+  };
+}
+
 export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
   const { reports, loading } = useRealtimeFeed();
   const { selectedBloodTypes, toggleBloodType, urgentOnly, setUrgentOnly } = useAppStore();
@@ -49,6 +58,7 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
   const [reportVisibility, setReportVisibility] = useState<ReportVisibilityFilter>("all");
   const [activeControlTab, setActiveControlTab] = useState<ControlTab>("summary");
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [reportListExpanded, setReportListExpanded] = useState(false);
   const isStacked = layout === "stacked";
 
   useEffect(() => {
@@ -97,6 +107,9 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
   const focusedReport = filtered.find((report) => report.id === focusedReportId) ?? filtered[0];
   const openReport = filtered.find((report) => report.id === openReportId);
   const routeReport = filtered.find((report) => report.id === routeReportId);
+  const stackedVisibleReports = reportListExpanded ? filtered : filtered.slice(0, 6);
+  const featuredStackedReport = stackedVisibleReports[0];
+  const secondaryStackedReports = stackedVisibleReports.slice(1);
 
   const handleRequestDirections = (reportId: string) => {
     setFocusedReportId(reportId);
@@ -375,7 +388,10 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
               reports={filtered}
               focusedReportId={focusedReport?.id}
               routedReportId={routeReport?.id}
-              onFocusReport={setFocusedReportId}
+              onOpenReport={(reportId) => {
+                setFocusedReportId(reportId);
+                setOpenReportId(reportId);
+              }}
               onRequestDirections={handleRequestDirections}
               onClearDirections={() => setRouteReportId(undefined)}
             />
@@ -426,56 +442,290 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
             </Card>
           ) : null}
 
-          <div className={isStacked ? "grid gap-4 lg:grid-cols-2 2xl:grid-cols-3" : "space-y-4"}>
-            {filtered.map((report) => (
-              <Card
-                key={report.id}
-                className={`transition duration-200 hover:-translate-y-0.5 ${
-                  report.id === focusedReport?.id ? "ring-2 ring-softCoral/50" : ""
-                }`}
-              >
-                <button
-                  type="button"
-                  className="w-full text-left"
-                  onClick={() => {
-                    setFocusedReportId(report.id);
-                    setOpenReportId(report.id);
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm text-slate-500">
-                        {report.organizationName ??
-                          (report.intent === "request" ? "Blood request" : "Availability post")}
-                      </p>
-                      <h3 className="mt-1 text-lg font-semibold text-slate-900">{report.title}</h3>
+          {filtered.length > 0 ? (
+            <div className={isStacked ? "space-y-4" : ""}>
+              {!isStacked ? (
+                <Card className="overflow-hidden border-slate-200/80 bg-white/88 p-0 shadow-[0_20px_50px_rgba(148,163,184,0.18)] backdrop-blur-xl">
+                  <div className="border-b border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,244,238,0.95),rgba(241,248,255,0.9))] px-5 py-4">
+                    <div className="flex items-end justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Live queue</p>
+                        <h3 className="mt-1 text-xl font-semibold text-slate-900">
+                          {filtered.length} active {filtered.length === 1 ? "report" : "reports"}
+                        </h3>
+                      </div>
+                      <div className="flex gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        <span className="rounded-full bg-white/80 px-3 py-2">
+                          {filtered.filter((report) => report.isEmergency).length} urgent
+                        </span>
+                        <span className="rounded-full bg-white/80 px-3 py-2">
+                          {filtered.filter((report) => report.intent === "request").length} requests
+                        </span>
+                      </div>
                     </div>
-                    <Badge
-                      className={
-                        report.intent === "request"
-                          ? "bg-softCoral text-white"
-                          : "bg-pixelSky/45 text-slate-800"
-                      }
-                    >
-                      {report.intent === "request"
-                        ? report.isEmergency
-                          ? "Urgent request"
-                          : "Request"
-                        : report.intent === "inventory_offer"
-                          ? "Bags available"
-                          : "Donor available"}
-                    </Badge>
                   </div>
-                  <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Full details</p>
-                  <p className="mt-3 text-sm text-slate-600">{report.description}</p>
-                  <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
-                    <span>{report.availableBags} bags available</span>
-                    <span>Expires {new Date(report.expiresAt).toLocaleTimeString()}</span>
+
+                  <div className="max-h-[calc(70vh-10rem)] overflow-y-auto p-4">
+                    <div className="space-y-3">
+                      {filtered.map((report, index) => {
+                        const expiry = formatReportExpiry(report.expiresAt);
+                        const isFocused = report.id === focusedReport?.id;
+
+                        return (
+                          <button
+                            key={report.id}
+                            type="button"
+                            className={`group relative w-full overflow-hidden rounded-[26px] border px-4 py-4 text-left transition duration-200 ${
+                              isFocused
+                                ? "border-softCoral/60 bg-[#fff7f2] shadow-[0_18px_40px_rgba(251,113,133,0.16)]"
+                                : "border-slate-200/80 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_14px_34px_rgba(148,163,184,0.18)]"
+                            }`}
+                            onClick={() => {
+                              setFocusedReportId(report.id);
+                              setOpenReportId(report.id);
+                            }}
+                          >
+                            <div className="flex items-start gap-4">
+                              <div
+                                className={`mt-0.5 flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-2xl border text-sm font-semibold ${
+                                  report.intent === "request"
+                                    ? "border-softCoral/20 bg-softCoral/10 text-softCoral"
+                                    : "border-sky-200 bg-pixelSky/35 text-sky-800"
+                                }`}
+                              >
+                                <span className="text-[10px] uppercase tracking-[0.14em] text-current/70">Type</span>
+                                <span>{report.bloodType}</span>
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                      {report.organizationName ??
+                                        (report.intent === "request" ? "Blood request" : "Availability post")}
+                                    </p>
+                                    <h3 className="mt-1 line-clamp-2 text-base font-semibold text-slate-900">
+                                      {report.title}
+                                    </h3>
+                                  </div>
+                                  <Badge
+                                    className={
+                                      report.intent === "request"
+                                        ? "shrink-0 bg-softCoral text-white"
+                                        : "shrink-0 bg-pixelSky/45 text-slate-800"
+                                    }
+                                  >
+                                    {report.intent === "request"
+                                      ? report.isEmergency
+                                        ? "Urgent request"
+                                        : "Request"
+                                      : report.intent === "inventory_offer"
+                                        ? "Bags available"
+                                        : "Donor available"}
+                                  </Badge>
+                                </div>
+
+                                <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{report.description}</p>
+
+                                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+                                  <span className="rounded-full bg-slate-100 px-3 py-1.5">
+                                    #{String(index + 1).padStart(2, "0")}
+                                  </span>
+                                  <span className="rounded-full bg-slate-100 px-3 py-1.5">
+                                    {report.availableBags} bags available
+                                  </span>
+                                  <span className="rounded-full bg-slate-100 px-3 py-1.5">
+                                    Expires {expiry.time}
+                                  </span>
+                                  <span className="rounded-full bg-slate-100 px-3 py-1.5">{expiry.date}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </button>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  <Card className="border-white/60 bg-white/82 p-4 shadow-[0_18px_40px_rgba(148,163,184,0.14)] backdrop-blur-xl">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Incident queue</p>
+                        <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                          {filtered.length} live {filtered.length === 1 ? "incident" : "incidents"}
+                        </h3>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        <span className="rounded-full bg-slate-100 px-3 py-2">
+                          {filtered.filter((report) => report.isEmergency).length} urgent
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-3 py-2">
+                          {selectedBloodTypes.length} blood types
+                        </span>
+                      </div>
+                    </div>
+
+                    {filtered.length > 6 ? (
+                      <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-200/70 pt-4">
+                        <p className="text-sm text-slate-500">
+                          Showing {stackedVisibleReports.length} of {filtered.length} incidents.
+                        </p>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="rounded-2xl"
+                          onClick={() => setReportListExpanded((current) => !current)}
+                        >
+                          {reportListExpanded ? "Show less" : "Show all incidents"}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </Card>
+
+                  {featuredStackedReport ? (
+                    (() => {
+                      const expiry = formatReportExpiry(featuredStackedReport.expiresAt);
+
+                      return (
+                        <Card
+                          className={`overflow-hidden border p-0 transition duration-200 ${
+                            featuredStackedReport.id === focusedReport?.id
+                              ? "border-softCoral/50 shadow-[0_18px_40px_rgba(251,113,133,0.16)]"
+                              : "border-white/60 shadow-[0_18px_40px_rgba(148,163,184,0.14)]"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            className="w-full bg-[linear-gradient(135deg,rgba(255,247,242,0.98),rgba(244,248,255,0.92))] p-5 text-left"
+                            onClick={() => {
+                              setFocusedReportId(featuredStackedReport.id);
+                              setOpenReportId(featuredStackedReport.id);
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                  {featuredStackedReport.organizationName ??
+                                    (featuredStackedReport.intent === "request" ? "Blood request" : "Availability post")}
+                                </p>
+                                <h3 className="mt-2 text-xl font-semibold leading-tight text-slate-900">
+                                  {featuredStackedReport.title}
+                                </h3>
+                              </div>
+                              <div className="flex shrink-0 flex-col items-end gap-2">
+                                <Badge
+                                  className={
+                                    featuredStackedReport.intent === "request"
+                                      ? "bg-softCoral text-white"
+                                      : "bg-pixelSky/45 text-slate-800"
+                                  }
+                                >
+                                  {featuredStackedReport.intent === "request"
+                                    ? featuredStackedReport.isEmergency
+                                      ? "Urgent request"
+                                      : "Request"
+                                    : featuredStackedReport.intent === "inventory_offer"
+                                      ? "Bags available"
+                                      : "Donor available"}
+                                </Badge>
+                                <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                  {featuredStackedReport.bloodType}
+                                </span>
+                              </div>
+                            </div>
+
+                            <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-600">
+                              {featuredStackedReport.description}
+                            </p>
+
+                            <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
+                              <span className="rounded-full bg-white/80 px-3 py-1.5">
+                                {featuredStackedReport.availableBags} bags available
+                              </span>
+                              <span className="rounded-full bg-white/80 px-3 py-1.5">
+                                Expires {expiry.time}
+                              </span>
+                              <span className="rounded-full bg-white/80 px-3 py-1.5">{expiry.date}</span>
+                            </div>
+                          </button>
+                        </Card>
+                      );
+                    })()
+                  ) : null}
+
+                  {secondaryStackedReports.length > 0 ? (
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      {secondaryStackedReports.map((report, index) => {
+                        const expiry = formatReportExpiry(report.expiresAt);
+
+                        return (
+                          <Card
+                            key={report.id}
+                            className={`overflow-hidden border p-0 transition duration-200 hover:-translate-y-0.5 ${
+                              report.id === focusedReport?.id
+                                ? "border-softCoral/50 shadow-[0_18px_40px_rgba(251,113,133,0.16)]"
+                                : "border-white/60 shadow-[0_14px_30px_rgba(148,163,184,0.12)]"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              className="w-full p-4 text-left"
+                              onClick={() => {
+                                setFocusedReportId(report.id);
+                                setOpenReportId(report.id);
+                              }}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div
+                                  className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-sm font-semibold ${
+                                    report.intent === "request"
+                                      ? "border-softCoral/20 bg-softCoral/10 text-softCoral"
+                                      : "border-sky-200 bg-pixelSky/35 text-sky-800"
+                                  }`}
+                                >
+                                  {report.bloodType}
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                        {report.organizationName ??
+                                          (report.intent === "request" ? "Blood request" : "Availability post")}
+                                      </p>
+                                      <h3 className="mt-1 line-clamp-2 text-base font-semibold text-slate-900">
+                                        {report.title}
+                                      </h3>
+                                    </div>
+                                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                      #{String(index + 2).padStart(2, "0")}
+                                    </span>
+                                  </div>
+
+                                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{report.description}</p>
+
+                                  <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
+                                    <span className="rounded-full bg-slate-100 px-3 py-1.5">
+                                      {report.availableBags} bags
+                                    </span>
+                                    <span className="rounded-full bg-slate-100 px-3 py-1.5">
+                                      {expiry.time}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          ) : null}
 
           {filtered.length === 0 ? (
             <Card>

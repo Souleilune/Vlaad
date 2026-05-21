@@ -11,7 +11,7 @@ type LiveMapProps = {
   reports: BloodReport[];
   focusedReportId?: string;
   routedReportId?: string;
-  onFocusReport: (reportId: string) => void;
+  onOpenReport: (reportId: string) => void;
   onRequestDirections: (reportId: string) => void;
   onClearDirections: () => void;
 };
@@ -97,10 +97,10 @@ function getPopupContent(report: BloodReport, isRoutingActive: boolean) {
       <div class="mt-4 flex gap-2">
         <button
           type="button"
-          data-focus-report="${report.id}"
+          data-open-report="${report.id}"
           class="inline-flex h-9 items-center justify-center rounded-xl border border-white/40 bg-white/70 px-3 text-sm font-semibold text-slate-700 backdrop-blur-xl transition hover:bg-white"
         >
-          Focus
+          View details
         </button>
         <button
           type="button"
@@ -143,7 +143,7 @@ export function LiveMap({
   reports,
   focusedReportId,
   routedReportId,
-  onFocusReport,
+  onOpenReport,
   onRequestDirections,
   onClearDirections
 }: LiveMapProps) {
@@ -252,14 +252,14 @@ export function LiveMap({
       });
 
       marker.bindPopup(getPopupContent(report, report.id === routedReportId));
-      marker.on("click", () => onFocusReport(report.id));
+      marker.on("click", () => onOpenReport(report.id));
       marker.on("popupopen", () => {
         const popupRoot = document.querySelector(`[data-report-popup="${report.id}"]`);
-        const focusButton = popupRoot?.querySelector<HTMLButtonElement>(`[data-focus-report="${report.id}"]`);
+        const openButton = popupRoot?.querySelector<HTMLButtonElement>(`[data-open-report="${report.id}"]`);
         const routeButton = popupRoot?.querySelector<HTMLButtonElement>(`[data-route-report="${report.id}"]`);
 
-        if (focusButton) {
-          focusButton.onclick = () => onFocusReport(report.id);
+        if (openButton) {
+          openButton.onclick = () => onOpenReport(report.id);
         }
 
         if (routeButton) {
@@ -269,7 +269,7 @@ export function LiveMap({
 
       marker.addTo(reportLayer);
     });
-  }, [onFocusReport, onRequestDirections, routedReportId, safeReports]);
+  }, [onOpenReport, onRequestDirections, routedReportId, safeReports]);
 
   useEffect(() => {
     const map = mapRef.current;

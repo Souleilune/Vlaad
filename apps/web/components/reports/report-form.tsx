@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { ChevronDown, Crosshair, MapPinned } from "lucide-react";
+import { ChevronDown, Crosshair, LoaderCircle, MapPinned, Search } from "lucide-react";
 import type { ReportIntent } from "@vlaad/shared";
 import { BLOOD_TYPES } from "@vlaad/shared";
 import { apiUrl } from "@/lib/api";
@@ -37,11 +37,18 @@ const initialForm = {
 };
 
 type FieldErrors = Partial<Record<keyof typeof initialForm, string>>;
+type AddressSearchResult = {
+  display_name: string;
+  lat: string;
+  lon: string;
+};
 
 export function ReportForm({ onSubmitted }: ReportFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [showMoreFields, setShowMoreFields] = useState(false);
+  const [showAdvancedFields, setShowAdvancedFields] = useState(false);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const [addressResults, setAddressResults] = useState<AddressSearchResult[]>([]);
   const [locationCaptured, setLocationCaptured] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -96,7 +103,6 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
   const latitude = Number(form.latitude);
   const longitude = Number(form.longitude);
   const hasValidMapPoint = Number.isFinite(latitude) && Number.isFinite(longitude);
-
   const updateField = (field: keyof typeof form, value: string | boolean) => {
     setForm((current) => ({ ...current, [field]: value }));
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -110,6 +116,13 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
     }));
     setLocationCaptured(true);
     setFieldErrors((current) => ({ ...current, latitude: undefined, longitude: undefined }));
+  };
+
+  const selectAddressResult = (result: AddressSearchResult) => {
+    updateField("address", result.display_name);
+    updateCoordinates({ lat: Number(result.lat), lng: Number(result.lon) });
+    setAddressResults([]);
+    setMessage("Address found. Review the pin below and drag it if needed.");
   };
 
   const validateForm = (): boolean => {
@@ -197,6 +210,8 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
       setMessage(payload.message ?? "Report submitted.");
       setForm(initialForm);
       setLocationCaptured(false);
+      setAddressResults([]);
+      setShowAdvancedFields(false);
       setFieldErrors({});
       window.dispatchEvent(new CustomEvent("vlaad:reports-refresh"));
       onSubmitted?.();
@@ -218,7 +233,7 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         updateCoordinates({ lat: coords.latitude, lng: coords.longitude });
-        setShowMoreFields(true);
+        setShowAdvancedFields(true);
         setMessage("Location captured. You can drag it more precisely by clicking the map below.");
         setLocating(false);
       },
@@ -230,12 +245,54 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
     );
   };
 
+  const searchAddress = async () => {
+    const query = form.address.trim();
+
+    if (query.length < 4) {
+      setFieldErrors((current) => ({
+        ...current,
+        address: "Type at least 4 characters to search for an address."
+      }));
+      return;
+    }
+
+    setSearchingAddress(true);
+    setMessage(null);
+    setFieldErrors((current) => ({ ...current, address: undefined }));
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=ph&q=${encodeURIComponent(query)}`,
+        {
+          headers: {
+            Accept: "application/json"
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Address search is unavailable right now.");
+      }
+
+      const payload = (await response.json()) as AddressSearchResult[];
+      setAddressResults(payload);
+
+      if (!payload.length) {
+        setMessage("No matching address found yet. Try adding a barangay, city, or landmark.");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to search for that address right now.");
+    } finally {
+      setSearchingAddress(false);
+    }
+  };
+
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="rounded-[24px] border border-softCoral/20 bg-softCoral/5 p-4">
         <p className="text-sm font-medium text-slate-900">{activeIntent.heading}</p>
         <p className="mt-1 text-sm text-slate-500">
-          {activeIntent.description} Start with the essentials. Optional details can be added if you have them.
+          {activeIntent.description} Add a searchable location, clear instructions, and the key contact details people will need.
         </p>
       </div>
 
@@ -277,11 +334,71 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
       </div>
       {fieldErrors.title ? <p className="text-sm text-softCoral">{fieldErrors.title}</p> : null}
 
-      <Input
-        placeholder="Address or landmark"
-        value={form.address}
-        onChange={(event) => updateField("address", event.target.value)}
-      />
+      <div className="space-y-3 rounded-[24px] border border-white/55 bg-white/45 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Location</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              Search for the address first, then confirm the pin on the map.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="h-10 rounded-2xl px-3 text-xs font-semibold"
+            onClick={fillMyLocation}
+            disabled={locating}
+          >
+            <Crosshair className="mr-2 h-3.5 w-3.5" />
+            {locating ? "Finding..." : "Use my location"}
+          </Button>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <Input
+            placeholder="Search address, hospital, or landmark"
+            value={form.address}
+            onChange={(event) => {
+              updateField("address", event.target.value);
+              setAddressResults([]);
+            }}
+          />
+          <Button type="button" variant="secondary" onClick={searchAddress} disabled={searchingAddress}>
+            {searchingAddress ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+            Search address
+          </Button>
+        </div>
+
+        {addressResults.length > 0 ? (
+          <div className="space-y-2 rounded-[20px] border border-slate-200/80 bg-white/80 p-2">
+            {addressResults.map((result) => (
+              <button
+                key={`${result.lat}:${result.lon}:${result.display_name}`}
+                type="button"
+                className="w-full rounded-2xl px-3 py-3 text-left text-sm text-slate-700 transition hover:bg-slate-50"
+                onClick={() => selectAddressResult(result)}
+              >
+                {result.display_name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {hasValidMapPoint ? (
+          <ReportLocationPicker
+            latitude={latitude}
+            longitude={longitude}
+            onPick={updateCoordinates}
+          />
+        ) : null}
+
+        {locationCaptured ? (
+          <div className="rounded-2xl bg-mint/20 px-4 py-3 text-sm text-slate-700">
+            Pin ready: drag the map pin if the exact spot needs adjustment.
+          </div>
+        ) : null}
+      </div>
       {fieldErrors.address ? <p className="text-sm text-softCoral">{fieldErrors.address}</p> : null}
 
       <textarea
@@ -292,9 +409,51 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
       />
       {fieldErrors.description ? <p className="text-sm text-softCoral">{fieldErrors.description}</p> : null}
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Input
+            placeholder="Organization, hospital, or center"
+            value={form.organizationName}
+            onChange={(event) => updateField("organizationName", event.target.value)}
+          />
+          <p className="text-xs text-slate-500">This helps people verify who the report is for.</p>
+        </div>
+        <div className="space-y-2">
+          <Input
+            type="number"
+            min="0"
+            placeholder={activeIntent.quantityPlaceholder}
+            value={form.availableBags}
+            onChange={(event) => updateField("availableBags", event.target.value)}
+          />
+          <p className="text-xs text-slate-500">{activeIntent.quantityLabel}</p>
+        </div>
+      </div>
+      {fieldErrors.availableBags ? <p className="text-sm text-softCoral">{fieldErrors.availableBags}</p> : null}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Input
+            placeholder="Contact number"
+            value={form.contactNumber}
+            onChange={(event) => updateField("contactNumber", event.target.value)}
+          />
+          <p className="text-xs text-slate-500">Strongly recommended so responders can verify details quickly.</p>
+        </div>
+        <div className="space-y-2">
+          <Input
+            type="datetime-local"
+            value={form.expiresAt}
+            onChange={(event) => updateField("expiresAt", event.target.value)}
+          />
+          <p className="text-xs text-slate-500">If left blank, the post stays live for 7 days.</p>
+        </div>
+      </div>
+      {fieldErrors.expiresAt ? <p className="text-sm text-softCoral">{fieldErrors.expiresAt}</p> : null}
+
+      <div className="flex flex-wrap items-center gap-4 rounded-[24px] border border-white/55 bg-white/45 px-4 py-4">
         {form.intent === "request" ? (
-          <label className="flex items-center gap-3 text-sm text-slate-600">
+          <label className="flex items-center gap-3 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={form.isEmergency}
@@ -303,45 +462,27 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
             Mark this request as urgent
           </label>
         ) : null}
-        <Button type="button" variant="secondary" size="sm" onClick={fillMyLocation} disabled={locating}>
-          <Crosshair className="mr-2 h-4 w-4" />
-          {locating ? "Finding location..." : "Use my location"}
-        </Button>
-      </div>
-      {locationCaptured ? (
-        <div className="rounded-2xl bg-mint/20 px-4 py-3 text-sm text-slate-700">
-          Location ready: {form.latitude}, {form.longitude}
+        <div className="text-sm text-slate-500">
+          Anonymous posts are allowed, but stronger details make the report more actionable.
         </div>
-      ) : null}
+      </div>
 
       <details
         className="rounded-[24px] border border-white/50 bg-white/55 p-4"
-        open={showMoreFields}
-        onToggle={(event) => setShowMoreFields((event.currentTarget as HTMLDetailsElement).open)}
+        open={showAdvancedFields}
+        onToggle={(event) => setShowAdvancedFields((event.currentTarget as HTMLDetailsElement).open)}
       >
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-slate-700">
-          Add more details
-          <ChevronDown className={`h-4 w-4 transition ${showMoreFields ? "rotate-180" : ""}`} />
+          Advanced options
+          <ChevronDown className={`h-4 w-4 transition ${showAdvancedFields ? "rotate-180" : ""}`} />
         </summary>
         <div className="mt-4 space-y-4">
-          <Input
-            placeholder="Organization or center"
-            value={form.organizationName}
-            onChange={(event) => updateField("organizationName", event.target.value)}
-          />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
-              placeholder="Optional contact"
-              value={form.contactNumber}
-              onChange={(event) => updateField("contactNumber", event.target.value)}
-            />
-            <Input
-              placeholder="Optional nickname"
+              placeholder="Nickname or initials"
               value={form.nickname}
               onChange={(event) => updateField("nickname", event.target.value)}
             />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
             <Input
               placeholder="Latitude"
               value={form.latitude}
@@ -353,37 +494,15 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
               onChange={(event) => updateField("longitude", event.target.value)}
             />
           </div>
+          <p className="text-xs text-slate-500">
+            Use these only if you need to fine-tune the submission manually.
+          </p>
           {fieldErrors.latitude || fieldErrors.longitude ? (
             <p className="text-sm text-softCoral">{fieldErrors.latitude ?? fieldErrors.longitude}</p>
           ) : null}
-          {hasValidMapPoint ? (
-            <ReportLocationPicker
-              latitude={latitude}
-              longitude={longitude}
-              onPick={updateCoordinates}
-            />
-          ) : null}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              type="datetime-local"
-              value={form.expiresAt}
-              onChange={(event) => updateField("expiresAt", event.target.value)}
-            />
-            <Input
-              type="number"
-              min="0"
-              placeholder={activeIntent.quantityPlaceholder}
-              value={form.availableBags}
-              onChange={(event) => updateField("availableBags", event.target.value)}
-            />
-          </div>
-          <p className="text-xs text-slate-500">{activeIntent.quantityLabel}</p>
-          {fieldErrors.expiresAt || fieldErrors.availableBags ? (
-            <p className="text-sm text-softCoral">{fieldErrors.expiresAt ?? fieldErrors.availableBags}</p>
-          ) : null}
           <div className="rounded-2xl bg-slate-50/80 p-3 text-xs text-slate-500">
             <MapPinned className="mr-2 inline h-4 w-4" />
-            If you skip expiry, the report will stay live for 7 days by default.
+            Search the address first, then use the map and coordinates only for refinement.
           </div>
         </div>
       </details>
@@ -392,9 +511,7 @@ export function ReportForm({ onSubmitted }: ReportFormProps) {
         {submitting ? "Submitting..." : activeIntent.submitLabel}
       </Button>
       {message ? <p className="text-sm text-slate-600">{message}</p> : null}
-      <p className="text-xs text-slate-500">
-        Anonymous posts are allowed, cooldown-protected, and shown on the live public feed.
-      </p>
+      <p className="text-xs text-slate-500">Anonymous posts are cooldown-protected and shown on the live public feed.</p>
     </form>
   );
 }

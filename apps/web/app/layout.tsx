@@ -4,8 +4,8 @@ import { Providers } from "@/components/providers";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "Vlaad | Blood Donation Tracker Platform",
-  description: "Realtime community blood availability and emergency response dashboard."
+  title: 'Project AGOS-BD - Adaptive Geo-mapped Outreach System for Blood Donations',
+  description: "Realtime blood donation outreach, verified reports, and emergency response mapping."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

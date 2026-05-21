@@ -1,6 +1,6 @@
-# Vlaad: Blood Donation Tracker Platform
+# Project "AGOS-BD": Adaptive Geo-mapped Outreach System for Blood Donations
 
-Vlaad is a modern full-stack emergency-first web platform for community blood availability reporting, live emergency requests, trusted-source verification, and donation tracking.
+Project "AGOS-BD" is a modern full-stack emergency-first web platform for community blood availability reporting, live emergency requests, trusted-source verification, and donation tracking.
 
 ## Stack
 
@@ -35,4 +35,4 @@ Vlaad is a modern full-stack emergency-first web platform for community blood av
 
 ## Design Direction
 
-The UI blends modern healthcare SaaS patterns with retro pixel accents, glassmorphism, soft gradients, rounded surfaces, and emergency-friendly interaction density.
+The UI now uses a warmer emergency-response identity built around deep crimson, warm coral, clean white, and soft gold, with Nunito as a single shared typeface for both display and body copy.

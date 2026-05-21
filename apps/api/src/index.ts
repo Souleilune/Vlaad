@@ -5,5 +5,5 @@ import { logInfo } from "./lib/logger";
 const app = createApp();
 
 app.listen(env.API_PORT, () => {
-  logInfo("Vlaad API listening", { port: env.API_PORT });
+  logInfo('Project "AGOS-BD" API listening', { port: env.API_PORT });
 });

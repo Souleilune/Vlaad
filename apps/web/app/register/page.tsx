@@ -58,14 +58,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(187,247,208,0.55),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(191,219,254,0.42),_transparent_34%),linear-gradient(135deg,_#fffdf7_0%,_#f6fbff_52%,_#fff6ee_100%)] px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(232,82,74,0.16),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(139,0,0,0.12),_transparent_34%),linear-gradient(135deg,_#fafafa_0%,_#fff7f5_52%,_#fdf0ec_100%)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <Card className="flex items-center border-white/50 bg-white/84 p-6 sm:p-8 lg:order-2">
           <div className="w-full">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <Badge className="bg-mint/30 text-slate-700">Create account</Badge>
-                <h1 className="mt-4 text-3xl font-semibold text-slate-900">Register for Vlaad</h1>
+                <h1 className="mt-4 text-3xl font-semibold text-slate-900">Register for Project AGOS-BD</h1>
                 <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
                   Create an account to manage your profile, keep track of your own blood requests, and return to them later without starting over.
                 </p>
@@ -148,7 +148,7 @@ export default function RegisterPage() {
           </div>
         </Card>
 
-        <Card className="relative overflow-hidden border-white/50 bg-gradient-to-br from-mint/85 via-white to-pixelSky/55 px-7 py-8 lg:order-1 lg:px-10 lg:py-10">
+        <Card className="relative overflow-hidden border-white/50 bg-gradient-to-br from-[#fbe2de] via-white to-[#f7eee5] px-7 py-8 lg:order-1 lg:px-10 lg:py-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.9),_transparent_26%),radial-gradient(circle_at_bottom_left,_rgba(15,23,42,0.08),_transparent_34%)]" />
           <div className="relative flex h-full flex-col justify-between">
             <div>

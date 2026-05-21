@@ -94,10 +94,10 @@ export function LoginPanel({
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(186,230,253,0.65),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(252,165,165,0.3),_transparent_30%),linear-gradient(135deg,_#fffaf2_0%,_#f8fbff_46%,_#fff4ed_100%)] px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(139,0,0,0.14),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(232,82,74,0.18),_transparent_30%),linear-gradient(135deg,_#fafafa_0%,_#fff8f7_46%,_#fdf0ec_100%)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <Card className="relative overflow-hidden border-white/50 bg-slate-900 px-7 py-8 text-white lg:px-10 lg:py-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(125,211,252,0.22),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(251,146,60,0.28),_transparent_28%)]" />
+        <Card className="relative overflow-hidden border-white/50 bg-deepCrimson px-7 py-8 text-white lg:px-10 lg:py-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.14),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(245,166,35,0.2),_transparent_28%)]" />
           <div className="relative flex h-full flex-col justify-between">
             <div>
               <Badge className="border border-white/15 bg-white/10 text-white">{badge}</Badge>
@@ -129,7 +129,7 @@ export function LoginPanel({
                 <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
                 <Input
                   className="h-12 bg-white"
-                  placeholder={audience === "admin" ? "admin@vlaad.org" : "donor@hospital.org"}
+                  placeholder={audience === "admin" ? "admin@agos-bd.org" : "donor@hospital.org"}
                   type="email"
                   value={form.email}
                   onChange={(event) => updateField("email", event.target.value)}

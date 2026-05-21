@@ -8,13 +8,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border-softCoral/30 bg-softCoral text-white shadow-glass hover:-translate-y-0.5 hover:bg-warmRose",
+          "border-softCoral/30 bg-softCoral text-cleanWhite shadow-neuSoft hover:-translate-y-0.5 hover:bg-warmRose",
         secondary:
-          "border-white/40 bg-white/70 text-slate-700 backdrop-blur-xl hover:bg-white",
+          "border-softCoral/14 bg-[#faf7f5] text-deepCrimson shadow-neuSoft hover:-translate-y-0.5 hover:bg-cleanWhite",
         ghost:
-          "border-transparent bg-transparent text-slate-700 hover:bg-white/60",
+          "border-transparent bg-transparent text-deepCrimson hover:bg-softCoral/10",
         pixel:
-          "border-softCoral/80 bg-[#fff1ec] text-slate-900 shadow-sm hover:bg-[#ffe7e1]"
+          "border-softGold/30 bg-[#f8f1e6] text-deepCrimson shadow-neuSoft hover:-translate-y-0.5 hover:bg-softGold/22"
       },
       size: {
         default: "h-11 px-5",

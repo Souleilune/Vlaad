@@ -1,11 +1,11 @@
-# Vlaad Architecture
+# Project "AGOS-BD" Architecture
 
 ## Frontend
 
 - Next.js App Router for landing, map, reports, dashboard, and admin views
 - React Query for server-state caching
 - Zustand for map filters, emergency overlays, and UI state
-- Tailwind CSS with custom tokens for retro-friendly emergency styling
+- Tailwind CSS with custom tokens for AGOS-BD brand styling
 - Supabase client for auth and realtime subscriptions
 - OpenStreetMap-ready map layer with room for Leaflet or similar client rendering
 

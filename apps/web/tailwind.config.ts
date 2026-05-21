@@ -17,24 +17,29 @@ const config: Config = {
         accent: "hsl(var(--accent))",
         muted: "hsl(var(--muted))",
         border: "hsl(var(--border))",
-        softCoral: "#FF6B6B",
-        warmRose: "#E76F73",
-        cream: "#FFF8E7",
-        mint: "#95D5B2",
-        pixelSky: "#89CFF0",
-        retroYellow: "#FFD166"
+        deepCrimson: "#8B0000",
+        softCoral: "#E8524A",
+        warmRose: "#C63D36",
+        cleanWhite: "#FAFAFA",
+        cream: "#FAFAFA",
+        mint: "#F6D3C9",
+        pixelSky: "#F3E5E3",
+        retroYellow: "#F5A623",
+        softGold: "#F5A623"
       },
       fontFamily: {
-        display: ["var(--font-pixel)", "sans-serif"],
+        display: ["var(--font-display)", "sans-serif"],
         body: ["var(--font-body)", "sans-serif"]
       },
       boxShadow: {
-        glass: "0 20px 45px rgba(231, 111, 115, 0.16)",
-        float: "0 18px 36px rgba(17, 24, 39, 0.14)"
+        neu: "9px 9px 18px rgba(139, 0, 0, 0.12), -9px -9px 18px rgba(255, 255, 255, 0.92)",
+        neuSoft: "6px 6px 14px rgba(139, 0, 0, 0.1), -6px -6px 14px rgba(255, 255, 255, 0.86)",
+        neuInset: "inset 4px 4px 10px rgba(139, 0, 0, 0.08), inset -4px -4px 10px rgba(255, 255, 255, 0.88)",
+        float: "14px 14px 28px rgba(139, 0, 0, 0.12), -10px -10px 24px rgba(255,255,255,0.88)"
       },
       backgroundImage: {
         "grid-fade":
-          "radial-gradient(circle at center, rgba(255,255,255,0.65) 0, rgba(255,255,255,0) 62%), linear-gradient(rgba(137,207,240,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(137,207,240,0.16) 1px, transparent 1px)"
+          "radial-gradient(circle at center, rgba(250,250,250,0.72) 0, rgba(250,250,250,0) 62%), linear-gradient(rgba(232,82,74,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(232,82,74,0.14) 1px, transparent 1px)"
       },
       keyframes: {
         float: {

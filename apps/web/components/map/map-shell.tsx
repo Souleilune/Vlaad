@@ -17,10 +17,10 @@ const LiveMap = dynamic(
     ssr: false,
     loading: () => (
       <div className="relative min-h-[560px] bg-[length:26px_26px] bg-grid-fade">
-        <div className="absolute inset-0 bg-gradient-to-br from-pixelSky/30 via-cream/10 to-mint/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-softCoral/12 via-cleanWhite/20 to-softGold/10" />
         <div className="relative flex h-full min-h-[560px] items-center justify-center">
           <div
-            className="h-12 w-12 rounded-full border-4 border-white/60 border-t-softCoral bg-white/40 shadow-glass backdrop-blur-xl"
+            className="h-12 w-12 rounded-full border-4 border-cleanWhite/60 border-t-softCoral bg-cleanWhite/40 shadow-glass backdrop-blur-xl"
             aria-label="Loading map"
             role="status"
           />
@@ -37,7 +37,7 @@ type MapShellProps = {
 
 type ReportVisibilityFilter = "all" | "request" | "availability";
 type ControlTab = "summary" | "blood" | "actions";
-const PUBLIC_MAP_TUTORIAL_KEY = "vlaad-public-map-tutorial-seen";
+const PUBLIC_MAP_TUTORIAL_KEY = "agos-bd-public-map-tutorial-seen";
 
 function formatReportExpiry(value: string) {
   const date = new Date(value);
@@ -125,8 +125,8 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
   };
 
   const openTutorial = () => setTutorialOpen(true);
-  const mapControlButtonClass = "rounded-2xl border border-slate-200/90";
-  const controlTabButtonClass = "h-9 rounded-2xl border border-slate-200/90 px-3 text-xs font-semibold uppercase tracking-[0.16em]";
+  const mapControlButtonClass = "rounded-2xl border border-softCoral/18";
+  const controlTabButtonClass = "h-9 rounded-2xl border border-softCoral/18 px-3 text-xs font-semibold uppercase tracking-[0.16em]";
 
   return (
     <>
@@ -142,7 +142,7 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
       <div className={`grid gap-6 ${isStacked ? "" : "xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.55fr)]"}`}>
         <Card className="overflow-hidden p-0">
           <div className={`relative ${isStacked ? "min-h-[36rem] sm:min-h-[42rem]" : "min-h-[70vh]"}`}>
-            <div className="absolute inset-0 bg-gradient-to-br from-pixelSky/30 via-cream/10 to-mint/30" />
+            <div className="absolute inset-0 bg-gradient-to-br from-softCoral/12 via-cleanWhite/18 to-softGold/10" />
             {isStacked ? (
               <div className="absolute right-4 top-16 z-[600] sm:right-5 sm:top-20">
                 <Button variant="secondary" size="sm" className="rounded-2xl" onClick={openTutorial}>
@@ -165,23 +165,23 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
                   aria-label={controlsExpanded ? "Collapse map controls" : "Expand map controls"}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="rounded-2xl bg-softCoral/10 p-2 text-softCoral">
+                  <span className="rounded-2xl bg-softCoral/10 p-2 text-softCoral">
                       <Radar className="h-4 w-4" />
                     </span>
                     <div>
                     {controlsExpanded ? (
                       <>
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Map Controls</p>
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-deepCrimson/42">Map Controls</p>
+                        <p className="text-sm font-semibold text-deepCrimson">
                           {filtered.length} live reports
                         </p>
                       </>
                       ) : (
-                      <p className="text-sm font-semibold text-slate-900">{filtered.length} reports</p>
+                      <p className="text-sm font-semibold text-deepCrimson">{filtered.length} reports</p>
                     )}
                     </div>
                   </div>
-                  <span className={`ml-1 text-slate-500 transition-transform ${controlsExpanded ? "rotate-180" : ""}`}>
+                  <span className={`ml-1 text-deepCrimson/56 transition-transform ${controlsExpanded ? "rotate-180" : ""}`}>
                     <ChevronDown className="h-4 w-4" />
                   </span>
                 </button>
@@ -215,20 +215,20 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
                       </Button>
                     </div>
 
-                    <div className="mt-4 hidden gap-2 text-sm text-slate-500 md:grid md:grid-cols-2">
-                      <div className="rounded-2xl bg-white/70 px-4 py-3">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Visible reports</p>
-                        <p className="mt-1 text-2xl font-semibold text-slate-900">{filtered.length}</p>
+                    <div className="mt-4 hidden gap-2 text-sm text-deepCrimson/56 md:grid md:grid-cols-2">
+                      <div className="rounded-2xl bg-cleanWhite/72 px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.2em] text-deepCrimson/42">Visible reports</p>
+                        <p className="mt-1 text-2xl font-semibold text-deepCrimson">{filtered.length}</p>
                       </div>
-                      <div className="rounded-2xl bg-white/70 px-4 py-3">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Emergency posts</p>
-                        <p className="mt-1 text-2xl font-semibold text-slate-900">
+                      <div className="rounded-2xl bg-cleanWhite/72 px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.2em] text-deepCrimson/42">Emergency posts</p>
+                        <p className="mt-1 text-2xl font-semibold text-deepCrimson">
                           {filtered.filter((report) => report.isEmergency).length}
                         </p>
                       </div>
-                      <div className="rounded-2xl bg-white/70 px-4 py-3 md:col-span-2">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Blood types</p>
-                        <p className="mt-1 text-2xl font-semibold text-slate-900">{selectedBloodTypes.length}</p>
+                      <div className="rounded-2xl bg-cleanWhite/72 px-4 py-3 md:col-span-2">
+                        <p className="text-xs uppercase tracking-[0.2em] text-deepCrimson/42">Blood types</p>
+                        <p className="mt-1 text-2xl font-semibold text-deepCrimson">{selectedBloodTypes.length}</p>
                       </div>
                     </div>
 
@@ -256,7 +256,7 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
                             size="sm"
                             className={
                               reportVisibility === "availability"
-                                ? "border border-sky-700/70 bg-sky-700 text-white hover:bg-sky-800"
+                                ? "border border-softGold/50 bg-softGold text-deepCrimson hover:bg-softGold/85"
                                 : mapControlButtonClass
                             }
                             onClick={() => setReportVisibility("availability")}
@@ -299,7 +299,7 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
                               key={type}
                               variant={selectedBloodTypes.includes(type) ? "default" : "secondary"}
                               size="sm"
-                              className="border border-slate-200/90 px-0"
+                              className="border border-softCoral/18 px-0"
                               onClick={() => toggleBloodType(type)}
                             >
                               {type}
@@ -333,13 +333,13 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
             </div>
 
             {tutorialOpen && isStacked ? (
-              <div className="absolute inset-0 z-[650] flex items-center justify-center bg-slate-900/28 p-4 sm:p-6">
-                <div className="w-full max-w-2xl rounded-2xl border border-white/80 bg-[#fffdf8] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.22)] sm:p-8">
+              <div className="absolute inset-0 z-[650] flex items-center justify-center bg-deepCrimson/18 p-4 sm:p-6">
+                <div className="w-full max-w-2xl rounded-2xl border border-softCoral/18 bg-[#fffdf8] p-6 shadow-[0_24px_70px_rgba(139,0,0,0.16)] sm:p-8">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">How Vlaad Works</p>
-                      <h3 className="mt-2 text-3xl font-semibold text-slate-900">Start on the map. Open the reports. Post only after you confirm the need.</h3>
-                      <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">
+                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-deepCrimson/42">How AGOS-BD Works</p>
+                      <h3 className="mt-2 text-3xl font-semibold text-deepCrimson">Start on the map. Open the reports. Post only after you confirm the need.</h3>
+                      <p className="mt-3 max-w-xl text-sm leading-6 text-deepCrimson/72">
                         The homepage is built for quick verification. Scan the map first, open a report for full details, then use the report button inside the map when you have a real update to share.
                       </p>
                     </div>
@@ -351,22 +351,22 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
                   <div className="mt-6 grid gap-4 md:grid-cols-3">
                     <div className="rounded-2xl bg-softCoral/10 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-softCoral">Step 1</p>
-                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Scan the map</h4>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                      <h4 className="mt-2 text-lg font-semibold text-deepCrimson">Scan the map</h4>
+                      <p className="mt-2 text-sm leading-6 text-deepCrimson/72">
                         Start with the markers. They show where requests, donor offers, and blood bag availability are happening right now.
                       </p>
                     </div>
-                    <div className="rounded-2xl bg-pixelSky/18 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Step 2</p>
-                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Open full details</h4>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <div className="rounded-2xl bg-softGold/16 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-softGold">Step 2</p>
+                      <h4 className="mt-2 text-lg font-semibold text-deepCrimson">Open full details</h4>
+                      <p className="mt-2 text-sm leading-6 text-deepCrimson/72">
                         Tap a marker or report card to inspect the location, blood type, urgency, contact details, and expiration time before acting.
                       </p>
                     </div>
-                    <div className="rounded-2xl bg-retroYellow/30 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">Step 3</p>
-                      <h4 className="mt-2 text-lg font-semibold text-slate-900">Create a report</h4>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <div className="rounded-2xl bg-softGold/24 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-deepCrimson">Step 3</p>
+                      <h4 className="mt-2 text-lg font-semibold text-deepCrimson">Create a report</h4>
+                      <p className="mt-2 text-sm leading-6 text-deepCrimson/72">
                         Use the Create a report button inside the map when you want to add the next verified request or availability update.
                       </p>
                     </div>

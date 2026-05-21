@@ -12,7 +12,7 @@ import { verifiedSourcesRouter } from "./verified-sources.routes";
 export const apiRouter = Router();
 
 apiRouter.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "vlaad-api" });
+  res.json({ ok: true, service: "agos-bd-api" });
 });
 
 apiRouter.use("/auth", authRouter);

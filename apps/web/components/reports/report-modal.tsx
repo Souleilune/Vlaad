@@ -17,14 +17,14 @@ export function ReportModal({ open, onClose }: ReportModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[rgba(28,16,16,0.22)] px-4 py-6 backdrop-blur-sm">
       <div className="absolute inset-0" aria-hidden="true" onClick={onClose} />
-      <Card className="scrollbar-hidden relative z-[1001] max-h-[90vh] w-full max-w-xl overflow-y-auto">
+      <Card className="scrollbar-hidden relative z-[1001] max-h-[90vh] w-full max-w-xl overflow-y-auto shadow-[0_18px_48px_rgba(28,16,16,0.16)]">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <Badge className="mb-3 bg-pixelSky/35 text-slate-700">Community Post Form</Badge>
-            <h2 className="text-2xl font-semibold text-slate-900">Post a blood request or availability update</h2>
-            <p className="mt-2 text-sm text-slate-500">
+            {/* <Badge className="mb-3 bg-softGold/20 text-deepCrimson">Community Post Form</Badge> */}
+            <h2 className="text-2xl font-semibold text-deepCrimson">Post a blood request or availability update</h2>
+            <p className="mt-2 text-sm text-deepCrimson/64">
               Share what is needed, who can donate, or where blood bags are available without filling every field first.
             </p>
           </div>

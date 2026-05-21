@@ -377,6 +377,19 @@ export function LiveMap({
   };
 
   useEffect(() => {
+    const handleExternalLocate = () => {
+      shouldRevealUserMarkerRef.current = true;
+      handleLocate();
+    };
+
+    window.addEventListener("agos-bd:locate-user", handleExternalLocate as EventListener);
+
+    return () => {
+      window.removeEventListener("agos-bd:locate-user", handleExternalLocate as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
     const map = mapRef.current;
 
     if (!map || !routedReport) {

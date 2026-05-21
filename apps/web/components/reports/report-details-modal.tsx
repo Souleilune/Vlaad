@@ -29,21 +29,21 @@ function getReportTone(report: BloodReport) {
   if (report.intent === "request") {
     return report.isEmergency
       ? {
-          badge: "bg-softCoral text-white",
+          badge: "bg-softCoral text-cleanWhite",
           panel: "from-[#fff0ea] via-[#fff8f1] to-white",
           accent: "text-softCoral"
         }
       : {
-          badge: "bg-[#ffeddc] text-[#9a3412]",
+          badge: "bg-softGold/25 text-deepCrimson",
           panel: "from-[#fff7ee] via-[#fffaf5] to-white",
-          accent: "text-[#c2410c]"
+          accent: "text-softGold"
         };
   }
 
   return {
-    badge: "bg-pixelSky/45 text-slate-800",
-    panel: "from-[#eff8ff] via-[#f7fbff] to-white",
-    accent: "text-sky-700"
+    badge: "bg-softGold/22 text-deepCrimson",
+    panel: "from-[#fff8f2] via-[#fffbf7] to-white",
+    accent: "text-softGold"
   };
 }
 
@@ -56,27 +56,27 @@ export function ReportDetailsModal({ report, open, onClose, onRequestDirections 
   const expiresAt = new Date(report.expiresAt);
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[rgba(28,16,16,0.22)] px-4 py-6 backdrop-blur-sm">
       <div className="absolute inset-0" aria-hidden="true" onClick={onClose} />
-      <Card className="scrollbar-hidden relative z-[1001] max-h-[90vh] w-full max-w-4xl overflow-y-auto border-[#f3e7dc] bg-[#fffdf9] p-0 shadow-[0_28px_80px_rgba(15,23,42,0.28)]">
+      <Card className="scrollbar-hidden relative z-[1001] max-h-[90vh] w-full max-w-4xl overflow-y-auto border-softCoral/14 bg-[#fffdf9] p-0 shadow-[0_20px_56px_rgba(28,16,16,0.16)]">
         <div className={`relative overflow-hidden rounded-t-[28px] bg-gradient-to-br ${tone.panel} px-6 pb-6 pt-6 sm:px-8`}>
           <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.95),transparent_65%)]" />
           <div className="relative flex items-start justify-between gap-4">
             <div className="max-w-2xl">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge className={tone.badge}>{getIntentLabel(report)}</Badge>
-                <span className="rounded-full border border-white/80 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="rounded-full border border-softCoral/16 bg-cleanWhite/78 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-deepCrimson/64">
                   {report.bloodType}
                 </span>
-                <span className="rounded-full border border-white/80 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="rounded-full border border-softCoral/16 bg-cleanWhite/78 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-deepCrimson/64">
                   {report.availableBags} bags
                 </span>
               </div>
 
-              <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-900 sm:text-[2.2rem]">
+              <h2 className="mt-4 text-3xl font-semibold leading-tight text-deepCrimson sm:text-[2.2rem]">
                 {report.title}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
+              <p className="mt-3 text-sm leading-6 text-deepCrimson/68">
                 {report.organizationName ?? (report.intent === "request" ? "Community request" : "Availability post")}
               </p>
             </div>

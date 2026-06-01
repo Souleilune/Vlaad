@@ -6,7 +6,7 @@ import { BookOpenText, ChevronDown, ClipboardPlus, LocateFixed, MapPinned, Searc
 import { PublicAnnouncementStrip, PublicAnnouncements } from "@/components/home/public-announcements";
 import { ReportModal } from "@/components/reports/report-modal";
 import { MapShell } from "@/components/map/map-shell";
-import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,7 +86,7 @@ export function PublicHome() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#fff8f7_0%,#fdf4f1_46%,#faefea_100%)] px-4 py-5 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#fff8f7_0%,#fdf4f1_46%,#faefea_100%)]">
       <ReportModal open={reportModalOpen} onClose={() => setReportModalOpen(false)} />
 
       <div className="pointer-events-none absolute inset-0">
@@ -98,7 +98,9 @@ export function PublicHome() {
         <div className="absolute inset-0 opacity-[0.22]" style={{ backgroundImage: "linear-gradient(rgba(139,0,0,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(139,0,0,0.08) 1px, transparent 1px)", backgroundSize: "72px 72px", maskImage: "linear-gradient(180deg, rgba(0,0,0,0.55), transparent 82%)" }} />
       </div>
 
-      <header className="sticky top-0 z-50 -mx-4 border-b border-deepCrimson/10 bg-[#fffaf7]/92 px-4 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <main className="relative px-4 py-5 sm:px-6 lg:px-8">
+
+      <header className="sticky top-0 z-50 border-b border-deepCrimson/10 bg-[#fffaf7]/92 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6">
           <button type="button" className="shrink-0 text-left" onClick={scrollToMap}>
             <span className="font-display text-2xl font-semibold tracking-[-0.045em] text-slate-950">
@@ -163,7 +165,11 @@ export function PublicHome() {
 
           {introVisible ? (
             <div className="absolute inset-0 z-[700] flex items-start justify-center rounded-[2rem] bg-cleanWhite/18 px-4 pb-4 pt-20 sm:px-6 sm:pb-6 sm:pt-24">
-              <Card className="w-full max-w-xl rounded-[2.25rem] border-cleanWhite/45 bg-cleanWhite/52 px-6 py-7 text-center shadow-[0_24px_70px_rgba(139,0,0,0.14)] backdrop-blur-xl sm:px-10 sm:py-9">
+              <div className="relative w-full max-w-xl">
+                {/* Decorative accent ring */}
+                <div className="absolute -inset-3 rounded-[2.5rem] bg-gradient-to-br from-deepCrimson/20 via-softCoral/15 to-softGold/20 blur-xl" />
+                
+                <Card className="relative rounded-[2rem] border-2 border-deepCrimson/15 bg-[#f8f3ef] px-6 py-7 text-center shadow-[8px_8px_24px_rgba(139,0,0,0.18)] sm:px-10 sm:py-9">
                 <h1 className="text-4xl font-extrabold tracking-[-0.03em] text-deepCrimson sm:text-5xl">
                   Start With The Map
                 </h1>
@@ -172,8 +178,8 @@ export function PublicHome() {
                 </p>
 
                 <form className="mt-7" onSubmit={handleQuickStart}>
-                  <div className="flex items-center rounded-full border border-softCoral/10 bg-[#f7f2ee] px-2 py-2 shadow-neuInset">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f8f3ef] text-softCoral shadow-neuSoft">
+                  <div className="flex items-center rounded-full border-none bg-[#f8f3ef] px-2 py-2 shadow-[inset_4px_4px_8px_rgba(139,0,0,0.08),inset_-4px_-4px_8px_rgba(255,255,255,0.9)]">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f8f3ef] text-softCoral shadow-[4px_4px_8px_rgba(139,0,0,0.1),-4px_-4px_8px_rgba(255,255,255,0.9)]">
                       <LocateFixed className="h-6 w-6" />
                     </div>
                     <Input
@@ -185,7 +191,7 @@ export function PublicHome() {
                     <div className="relative mr-2" ref={locationMenuRef}>
                       <button
                         type="button"
-                        className="inline-flex h-10 items-center gap-1 rounded-full border border-softCoral/10 bg-[#f8f3ef] px-3 text-sm font-semibold text-deepCrimson shadow-neuSoft transition hover:-translate-y-0.5"
+                        className="inline-flex h-10 items-center gap-1 rounded-full border-none bg-[#f8f3ef] px-3 text-sm font-semibold text-deepCrimson shadow-[4px_4px_8px_rgba(139,0,0,0.1),-4px_-4px_8px_rgba(255,255,255,0.9)] transition hover:shadow-[2px_2px_4px_rgba(139,0,0,0.1),-2px_-2px_4px_rgba(255,255,255,0.9)] active:shadow-[inset_2px_2px_4px_rgba(139,0,0,0.1),inset_-2px_-2px_4px_rgba(255,255,255,0.9)]"
                         onClick={() => setLocationMenuOpen((current) => !current)}
                         aria-expanded={locationMenuOpen}
                         aria-label="Location options"
@@ -195,10 +201,10 @@ export function PublicHome() {
                       </button>
 
                       {locationMenuOpen ? (
-                        <div className="absolute right-0 top-12 z-20 min-w-56 rounded-[1.25rem] border border-cleanWhite/45 bg-cleanWhite/80 p-2 shadow-[0_18px_42px_rgba(139,0,0,0.14)] backdrop-blur-xl">
+                        <div className="absolute right-0 top-12 z-20 min-w-56 rounded-[1.25rem] border-none bg-[#f8f3ef] p-2 shadow-[8px_8px_16px_rgba(139,0,0,0.12),-8px_-8px_16px_rgba(255,255,255,0.9)]">
                           <button
                             type="button"
-                            className="flex w-full items-center rounded-[1rem] px-3 py-3 text-left text-sm font-semibold text-deepCrimson transition hover:bg-softCoral/10"
+                            className="flex w-full items-center rounded-[1rem] px-3 py-3 text-left text-sm font-semibold text-deepCrimson transition hover:shadow-[inset_2px_2px_4px_rgba(139,0,0,0.08),inset_-2px_-2px_4px_rgba(255,255,255,0.9)]"
                             onClick={useMyLocation}
                             disabled={locatingFromStarter}
                           >
@@ -208,7 +214,7 @@ export function PublicHome() {
                         </div>
                       ) : null}
                     </div>
-                    <Button type="submit" size="icon" className="h-12 w-12 rounded-full shadow-neuSoft">
+                    <Button type="submit" size="icon" className="h-12 w-12 rounded-full border-none shadow-[4px_4px_8px_rgba(139,0,0,0.1),-4px_-4px_8px_rgba(255,255,255,0.9)] hover:shadow-[2px_2px_4px_rgba(139,0,0,0.1),-2px_-2px_4px_rgba(255,255,255,0.9)] active:shadow-[inset_2px_2px_4px_rgba(139,0,0,0.1),inset_-2px_-2px_4px_rgba(255,255,255,0.9)]">
                       <Search className="h-5 w-5" />
                     </Button>
                   </div>
@@ -220,15 +226,16 @@ export function PublicHome() {
 
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                   <Button onClick={() => setIntroVisible(false)}>Open live map</Button>
-                  <Button variant="secondary" onClick={() => guideSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+                  {/* <Button variant="secondary" onClick={() => guideSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
                     View guide first
-                  </Button>
+                  </Button> */}
                   <Button variant="pixel" onClick={() => setReportModalOpen(true)}>
                     <ClipboardPlus className="mr-2 h-4 w-4" />
                     Post update
                   </Button>
                 </div>
               </Card>
+              </div>
             </div>
           ) : null}
         </section>
@@ -298,55 +305,62 @@ export function PublicHome() {
         </section>
 
         <PublicAnnouncements />
-
-        {/* <footer className="relative left-1/2 w-screen -translate-x-1/2 bg-deepCrimson text-cleanWhite">
-          <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-10 sm:px-8 lg:grid-cols-[1.1fr_0.9fr_0.9fr] lg:px-10">
-            <div>
-              <div className="inline-flex rounded-[1.25rem] border border-cleanWhite/12 bg-[rgba(255,255,255,0.06)] px-4 py-3 shadow-[6px_6px_16px_rgba(54,0,0,0.24),-4px_-4px_12px_rgba(168,22,22,0.18)]">
-                <span className="text-lg font-extrabold tracking-[0.08em]">AGOS-BD</span>
-              </div>
-              <p className="mt-4 max-w-md text-sm leading-7 text-cleanWhite/76">
-                Adaptive Geo-mapped Outreach System for Blood Donations. Built to help communities surface urgent blood needs, verified supply, and clearer donation response.
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-cleanWhite/72">Quick Access</p>
-              <div className="mt-4 flex flex-col gap-3 text-sm">
-                <button type="button" className="text-left text-cleanWhite/82 transition hover:text-cleanWhite" onClick={() => setIntroVisible(true)}>
-                  Starter overlay
-                </button>
-                <button type="button" className="text-left text-cleanWhite/82 transition hover:text-cleanWhite" onClick={() => guideSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
-                  Guide
-                </button>
-                <button type="button" className="text-left text-cleanWhite/82 transition hover:text-cleanWhite" onClick={() => setReportModalOpen(true)}>
-                  Post update
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-cleanWhite/72">Access</p>
-              <div className="mt-4 flex flex-col gap-3 text-sm">
-                <Link href="/register" className="text-cleanWhite/82 transition hover:text-cleanWhite">
-                  Create account
-                </Link>
-                <Link href="/login" className="text-cleanWhite/82 transition hover:text-cleanWhite">
-                  Sign in
-                </Link>
-                <p className="text-cleanWhite/62">Public map stays available for guests.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-cleanWhite/10">
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 py-4 text-xs text-cleanWhite/62 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-10">
-              <p>Project AGOS-BD</p>
-              <p>Community blood request and availability coordination</p>
-            </div>
-          </div>
-        </footer> */}
       </section>
-    </main>
+      </main>
+
+      <footer className="relative border-t border-cleanWhite/10 bg-deepCrimson text-cleanWhite">
+        <div className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-5 sm:px-8 lg:grid-cols-3 lg:px-10">
+          <div>
+            <div className="text-lg font-extrabold tracking-[0.08em]">AGOS-BD</div>
+            <p className="mt-4 max-w-md text-sm leading-6 text-cleanWhite/76">
+              Adaptive Geo-mapped Outreach System for Blood Donations. Built to help communities surface urgent blood needs, verified supply, and clearer donation response.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cleanWhite/72">Quick Access</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm">
+              <button type="button" className="text-left text-cleanWhite/82 transition-colors duration-200 hover:text-cleanWhite" onClick={() => setIntroVisible(true)}>
+                Starter overlay
+              </button>
+              <button type="button" className="text-left text-cleanWhite/82 transition-colors duration-200 hover:text-cleanWhite" onClick={() => guideSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+                Guide
+              </button>
+              <button type="button" className="text-left text-cleanWhite/82 transition-colors duration-200 hover:text-cleanWhite" onClick={() => setReportModalOpen(true)}>
+                Post update
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cleanWhite/72">Account</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm">
+              <Link href="/register" className="text-cleanWhite/82 transition-colors duration-200 hover:text-cleanWhite">
+                Create account
+              </Link>
+              <Link href="/login" className="text-cleanWhite/82 transition-colors duration-200 hover:text-cleanWhite">
+                Sign in
+              </Link>
+              {/* <p className="text-cleanWhite/62">Public map stays available for guests.</p> */}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-cleanWhite/10">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 py-3 text-xs text-cleanWhite/62 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-10">
+            {/* <p>© 2026 AGOS-BD</p>
+            <p>Community Blood Request and Availability Coordination</p> */}
+            <div className="flex gap-4">
+              <Link href="/privacy" className="text-xs text-cleanWhite/62 transition-colors duration-200 hover:text-cleanWhite">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="text-xs text-cleanWhite/62 transition-colors duration-200 hover:text-cleanWhite">
+                Terms of Service
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

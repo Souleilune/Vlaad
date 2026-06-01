@@ -12,9 +12,9 @@ type ReportLocationPickerProps = {
 
 const pinIcon = L.divIcon({
   className: "vlaad-div-icon",
-  html: '<div class="vlaad-map-marker vlaad-map-marker--trusted">PIN</div>',
-  iconSize: [42, 52],
-  iconAnchor: [21, 50]
+  html: '<div class="vlaad-map-marker vlaad-map-marker--trusted"><span class="vlaad-map-marker__label">PIN</span></div>',
+  iconSize: [58, 64],
+  iconAnchor: [29, 60]
 });
 
 function MapClickSync({

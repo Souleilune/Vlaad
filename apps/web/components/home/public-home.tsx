@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { BookOpenText, ChevronDown, ClipboardPlus, LocateFixed, LogIn, MapPinned, Search, ShieldCheck, UserPlus } from "lucide-react";
+import { BookOpenText, ChevronDown, ClipboardPlus, LocateFixed, MapPinned, Search, ShieldCheck } from "lucide-react";
 import { PublicAnnouncementStrip, PublicAnnouncements } from "@/components/home/public-announcements";
 import { ReportModal } from "@/components/reports/report-modal";
 import { MapShell } from "@/components/map/map-shell";
@@ -14,23 +14,13 @@ import { Input } from "@/components/ui/input";
 export function PublicHome() {
   const [introVisible, setIntroVisible] = useState(true);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [navExpanded, setNavExpanded] = useState(false);
   const [quickSearch, setQuickSearch] = useState("");
   const [locationMenuOpen, setLocationMenuOpen] = useState(false);
   const [locatingFromStarter, setLocatingFromStarter] = useState(false);
   const [starterLocationMessage, setStarterLocationMessage] = useState<string | null>(null);
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mapSectionRef = useRef<HTMLElement | null>(null);
   const guideSectionRef = useRef<HTMLElement | null>(null);
   const locationMenuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current) {
-        clearTimeout(hoverTimerRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!locationMenuOpen) {
@@ -49,25 +39,6 @@ export function PublicHome() {
       document.removeEventListener("mousedown", handlePointerDown);
     };
   }, [locationMenuOpen]);
-
-  const openNav = () => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-    }
-
-    hoverTimerRef.current = setTimeout(() => {
-      setNavExpanded(true);
-    }, 220);
-  };
-
-  const closeNav = () => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-
-    setNavExpanded(false);
-  };
 
   const scrollToMap = () => {
     mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -127,65 +98,64 @@ export function PublicHome() {
         <div className="absolute inset-0 opacity-[0.22]" style={{ backgroundImage: "linear-gradient(rgba(139,0,0,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(139,0,0,0.08) 1px, transparent 1px)", backgroundSize: "72px 72px", maskImage: "linear-gradient(180deg, rgba(0,0,0,0.55), transparent 82%)" }} />
       </div>
 
-      <header className="pointer-events-none fixed left-1/2 top-4 z-50 -translate-x-1/2">
-        <div
-          className={`pointer-events-auto rounded-full border border-white/55 bg-white/80 shadow-glass backdrop-blur-xl transition-[width,box-shadow,background-color] duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            navExpanded ? "w-[min(52rem,calc(100vw-2rem))]" : "w-auto"
-          }`}
-          onMouseEnter={openNav}
-          onMouseLeave={closeNav}
-        >
-          <div
-            className={`flex items-center px-4 py-3 ${
-              navExpanded ? "justify-between gap-4" : "justify-center gap-0"
-            }`}
-          >
-            <button
-              type="button"
-              className="flex items-center text-left"
-              onClick={() => setNavExpanded((current) => !current)}
-              aria-expanded={navExpanded}
-              aria-label={navExpanded ? "Collapse navigation" : "Expand navigation"}
-            >
-              <span className="font-display text-2xl text-slate-900">AGOS-BD</span>
-            </button>
+      <header className="sticky top-0 z-50 -mx-4 border-b border-deepCrimson/10 bg-[#fffaf7]/92 px-4 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6">
+          <button type="button" className="shrink-0 text-left" onClick={scrollToMap}>
+            <span className="font-display text-2xl font-semibold tracking-[-0.045em] text-slate-950">
+              AGOS-BD<span className="align-super text-[0.55rem] font-semibold tracking-normal text-deepCrimson/55">PH</span>
+            </span>
+          </button>
 
-            <div
-              className={`overflow-hidden transition-[max-width] duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                navExpanded ? "max-w-[42rem]" : "max-w-0"
-              }`}
-              aria-hidden={!navExpanded}
-            >
-              <div
-                className={`flex items-center gap-2 whitespace-nowrap transition-[opacity,transform,padding] ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                  navExpanded
-                    ? "translate-x-0 pl-3 opacity-100 delay-200 duration-700"
-                    : "translate-x-3 pl-0 opacity-0 delay-0 duration-250"
-                }`}
-              >
-                <Button variant="pixel" size="sm" onClick={() => setReportModalOpen(true)}>
-                  <ClipboardPlus className="mr-2 h-4 w-4" />
-                  Create a report
-                </Button>
-                <Link href="/register" onClick={closeNav}>
-                  <Button variant="secondary" size="sm">
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Register
-                  </Button>
-                </Link>
-                <Link href="/login" onClick={closeNav}>
-                  <Button size="sm">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
+          <nav className="hidden items-center gap-9 text-xs font-semibold text-slate-500 md:flex" aria-label="Public navigation">
+            <button type="button" className="transition hover:text-slate-950" onClick={scrollToMap}>
+              Home
+            </button>
+            <button type="button" className="transition hover:text-slate-950" onClick={() => setReportModalOpen(true)}>
+              Report
+            </button>
+            <button type="button" className="transition hover:text-slate-950" onClick={() => guideSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+              Guide
+            </button>
+            <Link className="transition hover:text-slate-950" href="/register">
+              Register
+            </Link>
+            <Link className="transition hover:text-slate-950" href="/login">
+              Login
+            </Link>
+          </nav>
+
+          <Button
+            className="h-9 rounded-full px-5 text-xs shadow-none hover:shadow-none"
+            size="sm"
+            onClick={() => {
+              setIntroVisible(false);
+              scrollToMap();
+            }}
+          >
+            Begin Journey
+          </Button>
+        </div>
+
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-5 overflow-x-auto pb-3 text-xs font-semibold text-slate-500 md:hidden">
+          <button type="button" className="shrink-0 transition hover:text-slate-950" onClick={scrollToMap}>
+            Home
+          </button>
+          <button type="button" className="shrink-0 transition hover:text-slate-950" onClick={() => setReportModalOpen(true)}>
+            Report
+          </button>
+          <button type="button" className="shrink-0 transition hover:text-slate-950" onClick={() => guideSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+            Guide
+          </button>
+          <Link className="shrink-0 transition hover:text-slate-950" href="/register">
+            Register
+          </Link>
+          <Link className="shrink-0 transition hover:text-slate-950" href="/login">
+            Login
+          </Link>
         </div>
       </header>
 
-      <section className="relative flex flex-col gap-6 pt-20" aria-label="Public blood request and availability map">
+      <section className="relative flex flex-col gap-6 pt-2" aria-label="Public blood request and availability map">
         <section ref={mapSectionRef} className="relative mx-auto w-full max-w-6xl">
           <div className={introVisible ? "pointer-events-none select-none blur-[3px] saturate-[0.75]" : ""}>
             <MapShell layout="stacked" onCreateReport={() => setReportModalOpen(true)} />

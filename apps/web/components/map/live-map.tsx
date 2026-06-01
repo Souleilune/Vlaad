@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import L, { type DivIcon } from "leaflet";
-import { Clock3, LocateFixed, MapPinned, X } from "lucide-react";
+import { Clock3, LocateFixed, MapPinned, Maximize2, Minimize2, X } from "lucide-react";
 import type { BloodReport, GeoPoint } from "@vlaad/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,11 @@ type LiveMapProps = {
   reports: BloodReport[];
   focusedReportId?: string;
   routedReportId?: string;
+  isExpanded?: boolean;
   onOpenReport: (reportId: string) => void;
   onRequestDirections: (reportId: string) => void;
   onClearDirections: () => void;
+  onToggleExpanded?: () => void;
 };
 
 type RouteSummary = {
@@ -52,10 +54,10 @@ function createMarkerIcon(report: BloodReport): DivIcon {
 
   return L.divIcon({
     className: "vlaad-div-icon",
-    html: `<div class="vlaad-map-marker ${tone}">${report.bloodType}<span class="sr-only">${intentLabel}</span></div>`,
-    iconSize: [42, 52],
-    iconAnchor: [21, 50],
-    popupAnchor: [0, -44]
+    html: `<div class="vlaad-map-marker ${tone}"><span class="vlaad-map-marker__label">${report.bloodType}</span><span class="sr-only">${intentLabel}</span></div>`,
+    iconSize: [58, 64],
+    iconAnchor: [29, 60],
+    popupAnchor: [0, -52]
   });
 }
 
@@ -74,8 +76,8 @@ function getPopupContent(report: BloodReport, isRoutingActive: boolean) {
 
   const bloodTypeClasses =
     report.intent === "request"
-      ? "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-softCoral/25 bg-softCoral px-4 font-display text-xl text-white shadow-[0_10px_22px_rgba(251,113,133,0.22)]"
-      : "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-retroYellow/40 bg-retroYellow px-4 font-display text-xl text-slate-900 shadow-[0_10px_22px_rgba(255,209,102,0.24)]";
+      ? "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-softCoral/25 bg-softCoral px-4 font-display text-xl text-white"
+      : "inline-flex h-14 min-w-[72px] items-center justify-center rounded-[16px] border border-retroYellow/40 bg-retroYellow px-4 font-display text-xl text-slate-900";
 
   const contactBlock =
     report.nickname || report.contactNumber
@@ -107,7 +109,7 @@ function getPopupContent(report: BloodReport, isRoutingActive: boolean) {
           data-route-report="${report.id}"
           class="inline-flex h-9 items-center justify-center rounded-xl border border-softCoral/80 px-3 text-sm font-semibold text-slate-900 transition ${
             isRoutingActive
-              ? "bg-softCoral text-white shadow-[0_10px_22px_rgba(251,113,133,0.24)]"
+              ? "bg-softCoral text-white"
               : "bg-[#fff1ec] hover:bg-[#ffe7e1]"
           }"
         >
@@ -143,9 +145,11 @@ export function LiveMap({
   reports,
   focusedReportId,
   routedReportId,
+  isExpanded = false,
   onOpenReport,
   onRequestDirections,
-  onClearDirections
+  onClearDirections,
+  onToggleExpanded
 }: LiveMapProps) {
   const [userLocation, setUserLocation] = useState<GeoPoint | null>(null);
   const [locating, setLocating] = useState(false);
@@ -202,6 +206,15 @@ export function LiveMap({
     tileLayerRef.current = tileLayer;
     reportLayerRef.current = L.layerGroup().addTo(map);
 
+    const syncMarkerScale = () => {
+      const zoom = map.getZoom();
+      const scale = zoom <= 9 ? 0.56 : zoom <= 10 ? 0.66 : zoom <= 11 ? 0.76 : zoom <= 12 ? 0.88 : 1;
+      container.style.setProperty("--vlaad-marker-scale", String(scale));
+    };
+
+    syncMarkerScale();
+    map.on("zoomend", syncMarkerScale);
+
     const handleLocationFound = (event: L.LocationEvent) => {
       const point = { lat: event.latlng.lat, lng: event.latlng.lng };
       setUserLocation(point);
@@ -224,6 +237,7 @@ export function LiveMap({
     map.on("locationerror", handleLocationError);
 
     return () => {
+      map.off("zoomend", syncMarkerScale);
       map.off("locationfound", handleLocationFound);
       map.off("locationerror", handleLocationError);
       reportLayerRef.current?.clearLayers();
@@ -282,6 +296,12 @@ export function LiveMap({
   }, [defaultCenter]);
 
   useEffect(() => {
+    const timeout = window.setTimeout(() => mapRef.current?.invalidateSize(), 160);
+
+    return () => window.clearTimeout(timeout);
+  }, [isExpanded]);
+
+  useEffect(() => {
     const map = mapRef.current;
 
     if (!map || !focusedReport) {
@@ -327,9 +347,9 @@ export function LiveMap({
 
     const markerIcon = L.divIcon({
       className: "vlaad-div-icon",
-      html: '<div class="vlaad-map-marker vlaad-map-marker--trusted">You</div>',
-      iconSize: [42, 52],
-      iconAnchor: [21, 50]
+      html: '<div class="vlaad-map-marker vlaad-map-marker--trusted"><span class="vlaad-map-marker__label">You</span></div>',
+      iconSize: [58, 64],
+      iconAnchor: [29, 60]
     });
 
     if (userMarkerRef.current) {
@@ -495,20 +515,34 @@ export function LiveMap({
   }, [userLocation]);
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-cleanWhite">
       <div className="absolute right-4 top-4 z-[500] flex flex-col items-end gap-2">
-        <Button variant="secondary" size="sm" className="rounded-2xl" onClick={handleLocate} disabled={locating}>
-          <LocateFixed className="mr-2 h-4 w-4" />
-          {locating ? "Locating..." : "My location"}
+        {onToggleExpanded ? (
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-11 w-11 rounded-2xl shadow-none hover:shadow-none"
+            onClick={onToggleExpanded}
+            aria-label={isExpanded ? "Collapse expanded map" : "Expand map"}
+            title={isExpanded ? "Collapse map" : "Expand map"}
+          >
+            {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
+        ) : null}
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-11 w-11 rounded-2xl shadow-none hover:shadow-none"
+          onClick={handleLocate}
+          disabled={locating}
+          aria-label={locating ? "Locating current position" : "Show my location"}
+          title={locating ? "Locating..." : "My location"}
+        >
+          <LocateFixed className="h-4 w-4" />
         </Button>
       </div>
 
       <div className="absolute right-4 top-28 z-[500] flex flex-col items-end gap-2 sm:top-32">
-        {userLocation ? (
-          <div className="max-w-xs rounded-2xl border border-white/60 bg-white/90 px-3 py-2 text-right text-xs text-slate-600 shadow-glass backdrop-blur-xl">
-            <span className="font-semibold text-slate-900">You</span> marks your current location on the map.
-          </div>
-        ) : null}
         {locationError ? (
           <div className="max-w-xs rounded-2xl border border-softCoral/25 bg-white/90 px-3 py-2 text-right text-xs text-softCoral shadow-glass backdrop-blur-xl">
             {locationError}

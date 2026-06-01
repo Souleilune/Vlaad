@@ -59,6 +59,7 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
   const [activeControlTab, setActiveControlTab] = useState<ControlTab>("summary");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [reportListExpanded, setReportListExpanded] = useState(false);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
   const isStacked = layout === "stacked";
 
   useEffect(() => {
@@ -71,6 +72,19 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
       setTutorialOpen(true);
     }
   }, [isStacked]);
+
+  useEffect(() => {
+    if (!isMapExpanded || typeof document === "undefined") {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isMapExpanded]);
 
   const matchesReportVisibility = (intent: ReportIntent) => {
     if (reportVisibility === "all") {
@@ -125,8 +139,8 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
   };
 
   const openTutorial = () => setTutorialOpen(true);
-  const mapControlButtonClass = "rounded-2xl border border-softCoral/18";
-  const controlTabButtonClass = "h-9 rounded-2xl border border-softCoral/18 px-3 text-xs font-semibold uppercase tracking-[0.16em]";
+  const mapControlButtonClass = "rounded-2xl border border-softCoral/18 shadow-none hover:shadow-none";
+  const controlTabButtonClass = "h-9 rounded-2xl border border-softCoral/18 px-3 text-xs font-semibold uppercase tracking-[0.16em] shadow-none hover:shadow-none";
 
   return (
     <>
@@ -139,19 +153,31 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
           setOpenReportId(undefined);
         }}
       />
-      <div className={`grid gap-6 ${isStacked ? "" : "xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.55fr)]"}`}>
-        <Card className="overflow-hidden p-0">
-          <div className={`relative ${isStacked ? "min-h-[36rem] sm:min-h-[42rem]" : "min-h-[70vh]"}`}>
+      <div
+        className={
+          isMapExpanded
+            ? "fixed inset-0 z-[900] grid gap-0 bg-cleanWhite lg:grid-cols-[minmax(0,1fr)_minmax(360px,400px)]"
+            : `grid gap-6 ${isStacked ? "" : "xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.55fr)]"}`
+        }
+      >
+        <Card className={isMapExpanded ? "overflow-hidden rounded-none border-0 p-0 shadow-none" : "overflow-hidden p-0"}>
+          <div className={`relative ${isMapExpanded ? "h-screen min-h-screen" : isStacked ? "min-h-[36rem] sm:min-h-[42rem]" : "min-h-[70vh]"}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-softCoral/12 via-cleanWhite/18 to-softGold/10" />
-            {isStacked ? (
-              <div className="absolute right-4 top-16 z-[600] sm:right-5 sm:top-20">
-                <Button variant="secondary" size="sm" className="rounded-2xl" onClick={openTutorial}>
-                  <CircleHelp className="mr-2 h-4 w-4" />
-                  Guide
+            {isStacked && !isMapExpanded ? (
+              <div className="absolute right-4 top-[7.5rem] z-[600]">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-11 w-11 rounded-2xl shadow-none hover:shadow-none"
+                  onClick={openTutorial}
+                  aria-label="Open map guide"
+                  title="Guide"
+                >
+                  <CircleHelp className="h-4 w-4" />
                 </Button>
               </div>
             ) : null}
-            <div className="absolute bottom-[3.9rem] left-4 z-[600] w-[19rem] max-w-[calc(100%-2rem)] sm:bottom-[3.9rem] sm:left-5">
+            <div className={`absolute bottom-[3.9rem] left-4 z-[600] w-[19rem] max-w-[calc(100%-2rem)] sm:bottom-[3.9rem] sm:left-5 ${isMapExpanded ? "hidden" : ""}`}>
               <div
                 className={`border border-white/50 bg-white/82 shadow-glass backdrop-blur-xl transition-all ${
                   controlsExpanded ? "w-full rounded-2xl p-3" : "w-full rounded-2xl px-4 py-3"
@@ -343,7 +369,7 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
                         The homepage is built for quick verification. Scan the map first, open a report for full details, then use the report button inside the map when you have a real update to share.
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={closeTutorial}>
+                    <Button variant="ghost" size="sm" className="shadow-none hover:shadow-none" onClick={closeTutorial}>
                       Skip
                     </Button>
                   </div>
@@ -376,7 +402,7 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
                     <p className="text-sm text-slate-500">
                       Reopen this anytime with the <span className="font-semibold text-slate-700">Guide</span> button in the top-right corner of the map.
                     </p>
-                    <Button variant="pixel" onClick={closeTutorial}>
+                    <Button variant="pixel" className="shadow-none hover:shadow-none" onClick={closeTutorial}>
                       Got it
                     </Button>
                   </div>
@@ -388,20 +414,22 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
               reports={filtered}
               focusedReportId={focusedReport?.id}
               routedReportId={routeReport?.id}
+              isExpanded={isMapExpanded}
               onOpenReport={(reportId) => {
                 setFocusedReportId(reportId);
                 setOpenReportId(reportId);
               }}
               onRequestDirections={handleRequestDirections}
               onClearDirections={() => setRouteReportId(undefined)}
+              onToggleExpanded={() => setIsMapExpanded((current) => !current)}
             />
 
-            {isStacked && onCreateReport ? (
+            {isStacked && onCreateReport && !isMapExpanded ? (
               <div className="absolute bottom-4 left-4 z-[600] w-[11rem] max-w-[calc(100%-2rem)] sm:bottom-5 sm:left-5">
                 <Button
                   variant="default"
                   size="sm"
-                  className="w-full rounded-2xl shadow-[0_14px_30px_rgba(244,63,94,0.32)]"
+                  className="w-full rounded-2xl shadow-none hover:shadow-none"
                   onClick={onCreateReport}
                 >
                   <ClipboardPlus className="mr-2 h-4 w-4" />
@@ -412,8 +440,125 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
           </div>
         </Card>
 
-        <div className="space-y-4">
-          {isStacked ? (
+        <div className={isMapExpanded ? "hidden h-screen space-y-4 overflow-y-auto border-l border-slate-200 bg-[#fffdf8] p-5 shadow-[-18px_0_45px_rgba(15,23,42,0.12)] lg:block" : "space-y-4"}>
+          {isMapExpanded ? (
+            <Card className="border-slate-200/80 bg-white/92 p-5 shadow-[0_18px_40px_rgba(148,163,184,0.14)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-softCoral">Map Helpers</p>
+                  <h3 className="mt-2 text-2xl font-semibold text-slate-900">Community Reports</h3>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                <Button
+                  variant={reportVisibility === "all" ? "default" : "secondary"}
+                  size="sm"
+                  className="rounded-2xl px-2 shadow-none hover:shadow-none"
+                  onClick={() => setReportVisibility("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={reportVisibility === "request" ? "default" : "secondary"}
+                  size="sm"
+                  className="rounded-2xl px-2 shadow-none hover:shadow-none"
+                  onClick={() => setReportVisibility("request")}
+                >
+                  Need
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className={
+                    reportVisibility === "availability"
+                      ? "rounded-2xl border border-softGold/50 bg-softGold px-2 text-deepCrimson shadow-none hover:bg-softGold/85 hover:shadow-none"
+                      : "rounded-2xl px-2 shadow-none hover:shadow-none"
+                  }
+                  onClick={() => setReportVisibility("availability")}
+                >
+                  Supply
+                </Button>
+              </div>
+
+              <Button
+                variant={urgentOnly ? "default" : "secondary"}
+                size="sm"
+                className="mt-3 w-full rounded-2xl shadow-none hover:shadow-none"
+                onClick={() => setUrgentOnly(!urgentOnly)}
+              >
+                <Siren className="mr-2 h-4 w-4" />
+                Emergency only
+              </Button>
+
+              <div className="mt-5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Blood Types</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 rounded-2xl px-3 text-xs shadow-none hover:shadow-none"
+                    onClick={() => {
+                      BLOOD_TYPES.forEach((type) => {
+                        if (selectedBloodTypes.includes(type)) {
+                          toggleBloodType(type);
+                        }
+                      });
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {BLOOD_TYPES.map((type) => (
+                    <Button
+                      key={type}
+                      variant={selectedBloodTypes.includes(type) ? "default" : "secondary"}
+                      size="sm"
+                      className="rounded-2xl border border-softCoral/18 px-0 shadow-none hover:shadow-none"
+                      onClick={() => toggleBloodType(type)}
+                    >
+                      {type}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Urgent</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">{filtered.filter((report) => report.isEmergency).length}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Types</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">{selectedBloodTypes.length}</p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-2xl shadow-none hover:shadow-none"
+                  onClick={() => {
+                    if (focusedReport) {
+                      handleRequestDirections(focusedReport.id);
+                    }
+                  }}
+                  disabled={!focusedReport}
+                >
+                  <MapPinned className="mr-2 h-4 w-4" />
+                  Directions
+                </Button>
+                {onCreateReport ? (
+                  <Button variant="default" size="sm" className="rounded-2xl shadow-none hover:shadow-none" onClick={onCreateReport}>
+                    <ClipboardPlus className="mr-2 h-4 w-4" />
+                    Report
+                  </Button>
+                ) : null}
+              </div>
+            </Card>
+          ) : isStacked ? (
             <div className="px-1 pt-1">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
                 Community reports
@@ -575,7 +720,7 @@ export function MapShell({ layout = "split", onCreateReport }: MapShellProps) {
                         <Button
                           variant="secondary"
                           size="sm"
-                          className="rounded-2xl"
+                          className="rounded-2xl shadow-none hover:shadow-none"
                           onClick={() => setReportListExpanded((current) => !current)}
                         >
                           {reportListExpanded ? "Show less" : "Show all incidents"}
